@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-s3-backup
+  namespace: data
+spec:
+  # RPO (Recovery Point Objective) is 1 hour
+  schedule: "0 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: pg-backup
+            image: postgres:15
+            command:
+            - /bin/sh
+            - -c
+            - "pg_dump -Fc -h $PG_HOST -U $PG_USER $PG_DB > /tmp/backup.dump && aws s3 cp /tmp/backup.dump s3://$S3_BUCKET/backups/$(date +%Y%m%d%H%M).dump"
+            env:
+            - name: PG_HOST
+              value: "postgres.data.svc.cluster.local"
+            - name: PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password
+            - name: PG_DB
+              value: "venturelens"
+            - name: S3_BUCKET
+              value: "venturelens-dr-backups"
+          restartPolicy: OnFailure

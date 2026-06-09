@@ -1,0 +1,74 @@
+name: Institutional CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  security-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Bandit (Python SAST)
+        run: |
+          pip install bandit
+          bandit -r backend/app/ -ll
+
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: "p/python"
+
+      - name: Run Ruff Linter
+        run: |
+          pip install ruff
+          ruff check backend/app/
+
+      - name: Run MyPy Type Checker
+        run: |
+          pip install mypy
+          mypy backend/app/ --ignore-missing-imports
+
+  test:
+    runs-on: ubuntu-latest
+    needs: security-and-lint
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest pytest-cov httpx
+      - name: Run Pytest
+        run: |
+          cd backend
+          pytest tests/ --cov=app --cov-report=xml
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker Image
+        run: |
+          cd backend
+          docker build -t venturelens-backend:${{ github.sha }} .
+          # In a real setup, we'd push to ECR/ACR here.
