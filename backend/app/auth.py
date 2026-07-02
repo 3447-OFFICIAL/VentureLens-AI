@@ -5,7 +5,10 @@ import jwt
 from fastapi import Request, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-jwt-key-for-venturelens-ai-rebuild")
+from app.core.config import settings
+
+SECRET_KEY = settings.JWT_SECRET_KEY
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 REFRESH_TOKEN_EXPIRE_DAYS = 7

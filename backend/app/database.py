@@ -2,7 +2,10 @@ import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:password@db:5432/venturelens")
+from app.core.config import settings
+
+DATABASE_URL = settings.DATABASE_URL
+
 
 # Fallback to SQLite in-memory database for testing
 if os.getenv("TESTING") == "true":

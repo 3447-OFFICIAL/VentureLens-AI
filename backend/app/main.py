@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import auth, startups, diligence
+from .routers import auth, startups, diligence, tasks, alerts, chat
 from .core.limiter import setup_rate_limiting
 from .core.telemetry import setup_telemetry
 from slowapi.middleware import SlowAPIMiddleware
@@ -11,6 +11,19 @@ app = FastAPI(
     description="Institutional Financial Due Diligence Assistant Backend API",
     version="1.0.0",
 )
+
+@app.on_event("startup")
+async def on_startup():
+    from app.database import engine, Base
+    from app.seed import seed_data
+    
+    # Auto-generate DB schema tables if they do not exist
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        
+    # Auto-populate default seed data
+    await seed_data()
+
 
 setup_telemetry(app)
 setup_rate_limiting(app)
@@ -28,3 +41,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(startups.router, prefix="/api/v1")
 app.include_router(diligence.router, prefix="/api/v1")
+app.include_router(tasks.router, prefix="/api/v1")
+app.include_router(alerts.router, prefix="/api/v1")
+app.include_router(chat.router, prefix="/api/v1")
+

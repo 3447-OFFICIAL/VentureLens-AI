@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, Numeric, DateTime, ForeignKey, Text, Date
+from sqlalchemy import Column, String, Integer, Numeric, DateTime, ForeignKey, Text, Date, Boolean
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -30,6 +30,8 @@ class User(Base):
     organization = relationship("Organization", back_populates="users")
     memos = relationship("InvestmentMemo", back_populates="author")
     audit_logs = relationship("AuditLog", back_populates="user")
+    tasks = relationship("Task", back_populates="user", cascade="all, delete-orphan")
+
 
 class VCFirm(Base):
     __tablename__ = "vc_firms"
@@ -159,3 +161,18 @@ class AuditLog(Base):
 
     # Relationships
     user = relationship("User", back_populates="audit_logs")
+
+class Task(Base):
+    __tablename__ = "tasks"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    title = Column(String(255), nullable=False)
+    priority = Column(String(50), nullable=False, default="Medium")
+    due = Column(String(100), nullable=True)
+    completed = Column(Boolean, default=False)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", back_populates="tasks")
+

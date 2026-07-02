@@ -2,7 +2,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
 from langchain_openai import OpenAIEmbeddings
 import uuid
-from .database import settings
+from .core.config import settings
 
 # Initialize Qdrant Client
 qdrant_client = QdrantClient(url=settings.QDRANT_URL)
@@ -19,14 +19,18 @@ else:
             return [[0.1] * 1536 for _ in texts]
     embeddings_model = StubEmbeddings()
 
-# Ensure collection exists
+# Ensure collection exists without blocking local boot loops
 try:
     qdrant_client.get_collection(collection_name=COLLECTION_NAME)
 except Exception:
-    qdrant_client.create_collection(
-        collection_name=COLLECTION_NAME,
-        vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
-    )
+    try:
+        qdrant_client.create_collection(
+            collection_name=COLLECTION_NAME,
+            vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
+        )
+    except Exception as e:
+        print(f"Warning: Qdrant collection could not be initialized: {str(e)}")
+
 
 async def store_document_vectors(chunks: list[str], metadata: dict):
     """
