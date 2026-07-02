@@ -1,37 +1,50 @@
-from sqlmodel import SQLModel
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from pydantic_settings import BaseSettings
+import os
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
 
-class Settings(BaseSettings):
-    # Use asyncpg directly in the URL
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:password@db:5432/venturelens"
-    QDRANT_URL: str = "http://qdrant:6333"
-    LLAMA_CLOUD_API_KEY: str = ""
-    OPENAI_API_KEY: str = ""
-    CLERK_SECRET_KEY: str = ""
-    CLERK_ISSUER: str = ""
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:password@db:5432/venturelens")
 
-    class Config:
-        env_file = ".env"
+# Fallback to SQLite in-memory database for testing
+if os.getenv("TESTING") == "true":
+    DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
-settings = Settings()
+# Create async database engine with custom connection pooling rules
+engine_kwargs = {}
+if "sqlite" in DATABASE_URL:
+    engine_kwargs = {}
+else:
+    engine_kwargs = {
+        "pool_size": 20,
+        "max_overflow": 10,
+        "pool_timeout": 30,
+        "pool_recycle": 1800,
+    }
 
-from sqlalchemy.pool import NullPool
-
-# Institutional Database Setup with Connection Pooling
 engine = create_async_engine(
-    settings.DATABASE_URL, 
-    echo=False, # Disable echo in production for performance
-    pool_size=20,
-    max_overflow=10,
-    pool_timeout=30,
-    pool_recycle=1800 # Recycle connections after 30 minutes
+    DATABASE_URL,
+    echo=False,
+    **engine_kwargs
 )
 
-async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
 
-async def get_session():
-    async with AsyncSession(engine) as session:
-        yield session
+# Async session factory
+async_session_maker = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+# Declarative base class for SQLAlchemy models
+Base = declarative_base()
+
+async def get_db_session():
+    """Dependency injection wrapper yielding async sessions"""
+    async with async_session_maker() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()

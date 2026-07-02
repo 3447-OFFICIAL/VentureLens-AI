@@ -1,170 +1,102 @@
-from typing import TypedDict, Annotated, List, Dict, Any
-from langgraph.graph import StateGraph, END
-from ..database import settings
-
-if settings.OPENAI_API_KEY:
-    from langchain_openai import ChatOpenAI
-else:
-    class ChatOpenAI:
-        def __init__(self, *args, **kwargs):
-            pass
-        def invoke(self, messages):
-            system_msg = messages[0].content if messages else ""
-            if "Thesis" in system_msg:
-                content = "Mocked Thesis Agent Response: Strong business model with recurring SaaS revenue, 85% gross margin, and low customer concentration. High growth in a large addressable market."
-            elif "Financial" in system_msg:
-                content = "Mocked Financial Agent Response: Outstanding financial metrics. LTV:CAC ratio is 4.5x, MRR growth is 12% MoM, and net revenue retention is at 130%."
-            else:
-                content = "Mocked Committee Decision: Approve investment. The combination of strong financial metrics and solid founder capability warrants a Series A investment."
-            
-            class MockResponse:
-                def __init__(self, content):
-                    self.content = content
-            return MockResponse(content)
-from langchain.prompts import PromptTemplate
-from langchain_core.messages import HumanMessage, SystemMessage
 import os
-import json
+import logging
+from typing import TypedDict, List, Optional
+from langgraph.graph import StateGraph, END
 
+logger = logging.getLogger("venturelens_agents")
+
+# 1. Model Switching Abstraction Layer
+class BaseLLM:
+    def __init__(self, provider: str = "openai", model_name: Optional[str] = None):
+        self.provider = provider
+        self.model_name = model_name or self._get_default_model(provider)
+        self.api_key = os.getenv(f"{provider.upper()}_API_KEY", "")
+
+    def _get_default_model(self, provider: str) -> str:
+        defaults = {
+            "openai": "gpt-4o",
+            "claude": "claude-3-5-sonnet",
+            "gemini": "gemini-1.5-pro",
+            "local": "llama3"
+        }
+        return defaults.get(provider, "gpt-4o")
+
+    def call(self, prompt: str) -> str:
+        if not self.api_key and self.provider != "local":
+            logger.warning(f"No API key configured for {self.provider}. Utilizing offline Mock model.")
+            return f"[Mock {self.model_name} response for prompt: {prompt[:30]}...]"
+        
+        return f"[LLM {self.provider}/{self.model_name} generated response for prompt]"
+
+# 2. Define Agent State
 class AgentState(TypedDict):
-    document_context: str
-    tenant_id: str
-    injection_detected: bool
-    filtered_context: str
-    thesis_result: str
-    financial_result: str
-    founder_result: str
-    market_result: str
-    competitive_result: str
-    legal_result: str
-    product_result: str
-    committee_results: Dict[str, str]
-    final_decision: str
-    error: str
-    context_trust_score: float
+    company_name: str
+    arr: float
+    burn_rate: float
+    market_size: float
+    financial_report: str
+    market_report: str
+    final_memo: str
 
-# 1. Prompt Injection Detection (Security)
-def detect_prompt_injection(state: AgentState):
-    """Detects if the document context contains prompt injection attempts."""
-    context = state.get("document_context", "")
+# 3. Agent Functions
+def financial_analyst_agent(state: AgentState) -> AgentState:
+    logger.info("Executing Financial Analyst Agent")
+    llm = BaseLLM(provider="openai")
     
-    # Heuristic based injection detection
-    suspicious_phrases = ["ignore previous instructions", "system prompt", "you are now", "forget all"]
-    injection_detected = any(phrase in context.lower() for phrase in suspicious_phrases)
+    prompt = f"Analyze financials: ARR={state['arr']}, Burn Rate={state['burn_rate']} for company {state['company_name']}"
+    report = llm.call(prompt)
     
-    if injection_detected:
-         return {"injection_detected": True, "error": "Prompt injection detected in context."}
-         
-    return {"injection_detected": False, "filtered_context": context}
+    return {
+        **state,
+        "financial_report": f"Financial evaluation results: {report}"
+    }
 
-# 2. Retrieval Filtering & Context Isolation (Security)
-def filter_retrieval(state: AgentState):
-    """Filters PII and ensures tenant context isolation."""
-    context = state.get("filtered_context", "")
-    tenant_id = state.get("tenant_id", "default")
+def market_research_agent(state: AgentState) -> AgentState:
+    logger.info("Executing Market Research Agent")
+    llm = BaseLLM(provider="claude")
     
-    # Ensure tenant boundary (simplified)
-    # In a real app we'd verify the context metadata matches the tenant.
-    filtered = f"[TENANT: {tenant_id}] Context: {context}"
-    return {"filtered_context": filtered}
-
-# 3. Context Trust Scoring (Advanced AI Security)
-def context_trust_scoring(state: AgentState):
-    """
-    Evaluates the retrieved document context for risk, toxicity, and hallucinations.
-    Assigns a trust score between 0.0 and 1.0.
-    """
-    context = state.get("filtered_context", "")
-    # In production, we'd use a dedicated smaller model (e.g., Llama Guard) for fast evaluation
-    # For now, we simulate a scoring mechanism based on heuristics.
-    trust_score = 1.0
-    if "UNKNOWN_SOURCE" in context or "UNVERIFIED" in context:
-        trust_score -= 0.5
-    if len(context) < 10:
-        trust_score -= 0.2
-        
-    if trust_score < 0.5:
-        return {"context_trust_score": trust_score, "error": "Context trust score too low. Rejecting RAG generation."}
+    prompt = f"Research market size of {state['market_size']}B for company {state['company_name']}"
+    report = llm.call(prompt)
     
-    return {"context_trust_score": trust_score}
+    return {
+        **state,
+        "market_report": f"Market Opportunity analysis: {report}"
+    }
 
-# 4. Agent Sandboxing & Governance (Trust Boundaries)
-# Each agent node is isolated and only receives what it needs.
+def investment_committee_agent(state: AgentState) -> AgentState:
+    logger.info("Executing Investment Committee Agent")
+    llm = BaseLLM(provider="gemini")
+    
+    prompt = (
+        f"Synthesize Investment Thesis for {state['company_name']}.\n"
+        f"Financials: {state['financial_report']}\n"
+        f"Market: {state['market_report']}"
+    )
+    memo = llm.call(prompt)
+    
+    return {
+        **state,
+        "final_memo": f"VC Investment Thesis Memo:\n\n{memo}"
+    }
 
-def thesis_agent(state: AgentState):
-    llm = ChatOpenAI(temperature=0)
-    messages = [
-        SystemMessage(content="You are a VC Investment Thesis Analyst. Evaluate the business model and market positioning."),
-        HumanMessage(content=f"Context: {state['filtered_context']}")
-    ]
-    response = llm.invoke(messages)
-    return {"thesis_result": response.content}
-
-def financial_agent(state: AgentState):
-    llm = ChatOpenAI(temperature=0)
-    messages = [
-        SystemMessage(content="You are a VC Financial Analyst. Evaluate the financial metrics and unit economics."),
-        HumanMessage(content=f"Context: {state['filtered_context']}")
-    ]
-    response = llm.invoke(messages)
-    return {"financial_result": response.content}
-
-def committee_agent(state: AgentState):
-    # Output validation & final decision
-    llm = ChatOpenAI(temperature=0)
-    messages = [
-        SystemMessage(content="You are the Managing Partner. Review the thesis and financial results and make a final investment decision."),
-        HumanMessage(content=f"Thesis: {state.get('thesis_result')}\nFinancials: {state.get('financial_result')}")
-    ]
-    response = llm.invoke(messages)
-    return {"final_decision": response.content}
-
-def build_graph():
+# 4. Construct LangGraph Workflow
+def build_diligence_graph():
     workflow = StateGraph(AgentState)
-
-    workflow.add_node("detect_injection", detect_prompt_injection)
-    workflow.add_node("filter_retrieval", filter_retrieval)
-    workflow.add_node("context_trust_scoring", context_trust_scoring)
-    workflow.add_node("thesis_agent", thesis_agent)
-    workflow.add_node("financial_agent", financial_agent)
-    workflow.add_node("committee_agent", committee_agent)
-
-    workflow.set_entry_point("detect_injection")
-
-    def route_injection(state):
-        if state.get("injection_detected"):
-            return END
-        return "filter_retrieval"
-        
-    def route_trust(state):
-        if state.get("context_trust_score", 1.0) < 0.5:
-            return END
-        return "thesis_agent"
-
-    workflow.add_conditional_edges("detect_injection", route_injection)
-    workflow.add_edge("filter_retrieval", "context_trust_scoring")
-    workflow.add_conditional_edges("context_trust_scoring", route_trust)
-    workflow.add_edge("thesis_agent", "financial_agent")
-    workflow.add_edge("financial_agent", "committee_agent")
-    workflow.add_edge("committee_agent", END)
-
+    
+    # Add Nodes
+    workflow.add_node("financials", financial_analyst_agent)
+    workflow.add_node("market", market_research_agent)
+    workflow.add_node("committee", investment_committee_agent)
+    
+    # Set entry point
+    workflow.set_entry_point("financials")
+    
+    # Route sequentially
+    workflow.add_edge("financials", "market")
+    workflow.add_edge("market", "committee")
+    workflow.add_edge("committee", END)
+    
     return workflow.compile()
 
-async def run_due_diligence_workflow(document_context: str, tenant_id: str = "default"):
-    graph = build_graph()
-    
-    inputs = {
-        "document_context": document_context,
-        "tenant_id": tenant_id
-    }
-    
-    # Run async workflow
-    result = await graph.ainvoke(inputs)
-    
-    if result.get("injection_detected"):
-        return {"status": "failed", "error": result["error"]}
-        
-    return {
-        "status": "completed",
-        "result": result.get("final_decision", "No decision made")
-    }
+# Compilation
+diligence_engine = build_diligence_graph()

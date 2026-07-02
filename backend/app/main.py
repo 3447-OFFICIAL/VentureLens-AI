@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import documents, analysis, intelligence, reports, privacy
+from .routers import auth, startups, diligence
 from .core.limiter import setup_rate_limiting
 from .core.telemetry import setup_telemetry
 from slowapi.middleware import SlowAPIMiddleware
@@ -25,16 +25,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(documents.router)
-app.include_router(analysis.router)
-app.include_router(intelligence.router)
-app.include_router(reports.router)
-app.include_router(privacy.router)
-
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to VentureLens AI API"}
-
-@app.get("/health")
-def health_check():
-    return {"status": "healthy"}
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(startups.router, prefix="/api/v1")
+app.include_router(diligence.router, prefix="/api/v1")
