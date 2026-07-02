@@ -24,6 +24,103 @@ class AnalysisResponse(BaseModel):
     status: str
     health_score: Optional[int] = None
 
+class DiligenceDetailResponse(BaseModel):
+    id: str
+    deal_id: str
+    startup_id: str
+    startup_name: str
+    status: str
+    health_score: Optional[int] = None
+
+@router.get("", response_model=List[DiligenceDetailResponse])
+async def list_due_diligence(
+    db: AsyncSession = Depends(get_db_session),
+    current_user: UserContext = Depends(get_current_user)
+):
+    from app.models.models import Startup
+    vc_result = await db.execute(
+        select(VCFirm.id).where(VCFirm.organization_id == current_user.organization_id)
+    )
+    vc_firm_ids = vc_result.scalars().all()
+    
+    if not vc_firm_ids:
+        return []
+        
+    query = (
+        select(
+            DueDiligence.id,
+            DueDiligence.deal_id,
+            DueDiligence.status,
+            DueDiligence.health_score,
+            Startup.id.label("startup_id"),
+            Startup.name.label("startup_name")
+        )
+        .join(Deal, Deal.id == DueDiligence.deal_id)
+        .join(Startup, Startup.id == Deal.startup_id)
+        .where(Deal.vc_firm_id.in_(vc_firm_ids))
+    )
+    
+    result = await db.execute(query)
+    rows = result.all()
+    
+    return [
+        DiligenceDetailResponse(
+            id=row.id,
+            deal_id=row.deal_id,
+            startup_id=row.startup_id,
+            startup_name=row.startup_name,
+            status=row.status,
+            health_score=row.health_score
+        )
+        for row in rows
+    ]
+
+class DocumentListResponse(BaseModel):
+    id: str
+    file_name: str
+    file_type: Optional[str] = None
+    status: str
+    created_at: str
+
+@router.get("/{id}/documents", response_model=List[DocumentListResponse])
+async def list_diligence_documents(
+    id: str,
+    db: AsyncSession = Depends(get_db_session),
+    current_user: UserContext = Depends(get_current_user)
+):
+    vc_result = await db.execute(
+        select(VCFirm.id).where(VCFirm.organization_id == current_user.organization_id)
+    )
+    vc_firm_ids = vc_result.scalars().all()
+    
+    diligence_check = await db.execute(
+        select(DueDiligence)
+        .join(Deal, Deal.id == DueDiligence.deal_id)
+        .where(DueDiligence.id == id, Deal.vc_firm_id.in_(vc_firm_ids))
+    )
+    diligence = diligence_check.scalars().first()
+    if not diligence:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Due diligence record not found"
+        )
+        
+    result = await db.execute(
+        select(Document).where(Document.due_diligence_id == id).order_by(Document.created_at.desc())
+    )
+    docs = result.scalars().all()
+    
+    return [
+        DocumentListResponse(
+            id=d.id,
+            file_name=d.file_name,
+            file_type=d.file_type,
+            status=d.status,
+            created_at=d.created_at.isoformat()
+        )
+        for d in docs
+    ]
+
 @router.post("/{id}/documents/upload", response_model=DocumentResponse)
 async def upload_document(
     id: str,

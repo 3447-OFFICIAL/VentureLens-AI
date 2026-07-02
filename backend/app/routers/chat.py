@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-import asyncio
-import os
+import logging
 from app.auth import get_current_user, UserContext
+from app.vector_store import search_documents_with_scores
+from app.services.llm_provider import LLMProvider
 
+logger = logging.getLogger("venturelens_chat")
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 class ChatRequest(BaseModel):
@@ -15,29 +17,52 @@ async def stream_chat(
     req: ChatRequest,
     current_user: UserContext = Depends(get_current_user)
 ):
-    async def event_generator():
-        message = req.message.lower()
-        
-        if "runway" in message or "synthoai" in message:
-            response_text = (
-                "Based on the latest financial metrics, SynthoAI has an ARR of $12.4M and a monthly burn of $250k. "
-                "This yields approximately 14 months of remaining runway. While their growth rate (+33%) is strong, "
-                "we recommend monitoring their marketing spend efficiency to prevent early capital exhaustion."
-            )
-        elif "ecomove" in message or "concentration" in message:
-            response_text = (
-                "EcoMove is currently showing a high risk alert due to customer concentration: their top 3 clients "
-                "represent 48% of total MRR. We recommend negotiating longer-term contract terms before closing the Series A."
-            )
-        else:
-            response_text = (
-                "Hello! I am VentureLens AI, your due diligence copilot. I can analyze startup deck files, "
-                "run Monte Carlo cash flow simulations, build post-money cap tables, and identify portfolio risks."
-            )
+    # 1. Retrieve tenant-isolated context from Qdrant vector store
+    tenant_id = current_user.organization_id
+    logger.info(f"Querying Qdrant for tenant {tenant_id} with query: {req.message}")
+    
+    try:
+        relevant_chunks = search_documents_with_scores(query=req.message, tenant_id=tenant_id, limit=3)
+    except Exception as e:
+        logger.error(f"Error querying Qdrant search: {e}")
+        relevant_chunks = []
 
-        words = response_text.split(" ")
-        for word in words:
-            yield f"data: {word} \n\n"
-            await asyncio.sleep(0.15)
+    # 2. Assemble context prompt
+    if relevant_chunks:
+        context = "\n\n---\n\n".join([c["text"] for c in relevant_chunks])
+        prompt = (
+            f"Context from uploaded tenant documents:\n"
+            f"{context}\n\n"
+            f"User Question: {req.message}\n\n"
+            f"Answer the question concisely utilizing the context above. If the context does not contain the answer, "
+            f"use your general knowledge of venture capital and financials, but prioritize document context."
+        )
+    else:
+        prompt = req.message
+
+    system_instruction = (
+        "You are VentureLens AI, an institutional-grade VC Due Diligence and Portfolio Intelligence assistant. "
+        "Your tone is professional, analytical, objective, and precise. Help analysts, associates, and partners "
+        "audit startups, calculate runways, and evaluate metrics."
+    )
+
+    async def event_generator():
+        # Call LLM provider stream helper
+        try:
+            stream = LLMProvider.generate_stream(prompt, system_instruction)
+            for chunk in stream:
+                yield f"data: {chunk}\n\n"
+            
+            # 3. Stream Citations and Trust Scores
+            if relevant_chunks:
+                yield "data: \n\n---\n**Sources & RAG Citations:**\n"
+                for idx, c in enumerate(relevant_chunks):
+                    # Clamp similarity score helper (e.g. if stub returned 0.1)
+                    score_pct = round(max(c["score"], 0.0) * 100, 1)
+                    yield f"data: * {c['file_name']} (Relevance Match: {score_pct}%)\n"
+                yield "data: \n\n"
+        except Exception as e:
+            logger.error(f"Streaming failed: {e}")
+            yield f"data: Error in LLM stream: {str(e)}\n\n"
             
     return StreamingResponse(event_generator(), media_type="text/event-stream")

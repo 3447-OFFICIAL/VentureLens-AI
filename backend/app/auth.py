@@ -38,6 +38,7 @@ async def get_current_user(
     request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
 ) -> UserContext:
+    import requests
     token = None
     
     # 1. Check authorization header bearer token
@@ -55,6 +56,60 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
         
+    # Check if this is a Clerk token (RS256 asymmetric signature)
+    try:
+        unverified_header = jwt.get_unverified_header(token)
+        is_clerk_token = "kid" in unverified_header and unverified_header.get("alg") == "RS256"
+    except Exception:
+        is_clerk_token = False
+
+    if is_clerk_token:
+        try:
+            clerk_secret = os.getenv("CLERK_SECRET_KEY", "")
+            # If test keys or mock mode is active, decode directly without signature check
+            if clerk_secret.startswith("sk_test_") or os.getenv("NEXT_PUBLIC_MOCK_AUTH") == "true":
+                payload = jwt.decode(token, options={"verify_signature": False})
+            else:
+                kid = unverified_header.get("kid")
+                unverified_payload = jwt.decode(token, options={"verify_signature": False})
+                iss = unverified_payload.get("iss")
+                
+                # Fetch Clerk JWKS
+                jwks_url = f"{iss}/.well-known/jwks.json"
+                res = requests.get(jwks_url, timeout=5)
+                jwks = res.json()
+                
+                public_key = None
+                for key in jwks.get("keys", []):
+                    if key.get("kid") == kid:
+                        from jwt.algorithms import RSAAlgorithm
+                        public_key = RSAAlgorithm.from_jwk(key)
+                        break
+                        
+                if not public_key:
+                    raise HTTPException(status_code=401, detail="Invalid Clerk public key ID")
+                    
+                payload = jwt.decode(token, public_key, algorithms=["RS256"], audience=clerk_secret)
+                
+            user_id = payload.get("sub")
+            email = payload.get("email") or payload.get("sub")
+            public_meta = payload.get("public_metadata", {})
+            role = public_meta.get("role", "analyst")
+            org_id = payload.get("org_id") or "org_default"
+            
+            return UserContext(
+                user_id=user_id,
+                email=email,
+                role=role,
+                organization_id=org_id
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Clerk verification failed: {str(e)}"
+            )
+
+    # Fallback to local HS256 JWT verification
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")

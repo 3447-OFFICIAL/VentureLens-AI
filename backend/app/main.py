@@ -1,6 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import auth, startups, diligence, tasks, alerts, chat
+from .routers import auth, startups, diligence, tasks, alerts, chat, valuation
 from .core.limiter import setup_rate_limiting
 from .core.telemetry import setup_telemetry
 from slowapi.middleware import SlowAPIMiddleware
@@ -44,4 +44,20 @@ app.include_router(diligence.router, prefix="/api/v1")
 app.include_router(tasks.router, prefix="/api/v1")
 app.include_router(alerts.router, prefix="/api/v1")
 app.include_router(chat.router, prefix="/api/v1")
+app.include_router(valuation.router, prefix="/api/v1")
+
+from app.core.websocket import manager
+
+@app.websocket("/ws/{tenant_id}")
+async def websocket_endpoint(websocket: WebSocket, tenant_id: str):
+    await manager.connect(websocket, tenant_id)
+    try:
+        while True:
+            # Echo loop or listening for client requests
+            data = await websocket.receive_json()
+            await manager.send_personal_message({"echo": data}, websocket)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, tenant_id)
+    except Exception:
+        manager.disconnect(websocket, tenant_id)
 

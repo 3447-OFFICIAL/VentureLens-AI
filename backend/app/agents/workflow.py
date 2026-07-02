@@ -100,3 +100,24 @@ def build_diligence_graph():
 
 # Compilation
 diligence_engine = build_diligence_graph()
+
+async def run_due_diligence_workflow(document_context: str, tenant_id: str) -> dict:
+    initial_state = {
+        "company_name": "Target Startup",
+        "arr": 12.4,
+        "burn_rate": 0.25,
+        "market_size": 15.0,
+        "financial_report": f"Context length: {len(document_context)}. Preview: {document_context[:200]}",
+        "market_report": "",
+        "final_memo": ""
+    }
+    
+    # Execute the LangGraph workflow
+    result = diligence_engine.invoke(initial_state)
+    return {
+        "company_name": result.get("company_name"),
+        "financial_report": result.get("financial_report"),
+        "market_report": result.get("market_report"),
+        "final_memo": result.get("final_memo"),
+        "status": "success"
+    }

@@ -1,7 +1,7 @@
 import asyncio
 from sqlalchemy.future import select
 from app.database import async_session_maker, Base, engine
-from app.models.models import Organization, User, VCFirm, Startup, Deal, DueDiligence, Portfolio, Metric, AuditLog, Task
+from app.models.models import Organization, User, VCFirm, Startup, Deal, DueDiligence, Portfolio, Metric, AuditLog, Task, Founder, Investor, Meeting, Report, Comment, Notification
 
 async def seed_data():
     async with async_session_maker() as session:
@@ -96,6 +96,53 @@ async def seed_data():
         ]
         for t in tasks_list:
             session.add(t)
+
+        # Seed Founders, Investors, Meetings, Comments, Notifications
+        from datetime import datetime
+        
+        # 1. Seed Founders for SynthoAI and QuantumDB
+        s_syntho = startups[0]
+        s_quantum = startups[1]
+        
+        founders_list = [
+            Founder(startup_id=s_syntho.id, full_name="Sarah Jenkins", email="sarah@syntho.ai", title="CEO & Co-founder", shares_owned=500000),
+            Founder(startup_id=s_syntho.id, full_name="David Chen", email="david@syntho.ai", title="CTO & Co-founder", shares_owned=300000),
+            Founder(startup_id=s_quantum.id, full_name="Elena Rostova", email="elena@quantumdb.io", title="CEO", shares_owned=600000)
+        ]
+        for f in founders_list:
+            session.add(f)
+            
+        # Get portfolio entries
+        portfolio_results = await session.execute(select(Portfolio))
+        portfolios = portfolio_results.scalars().all()
+        
+        if portfolios:
+            p_syntho = portfolios[0]
+            investors_list = [
+                Investor(portfolio_id=p_syntho.id, name="VentureLens VC", shares_owned=200000, ownership_percentage=12.50, share_class="Preferred Series A"),
+                Investor(portfolio_id=p_syntho.id, name="Founders Group", shares_owned=800000, ownership_percentage=50.00, share_class="Common"),
+                Investor(portfolio_id=p_syntho.id, name="Angel Syndicate", shares_owned=100000, ownership_percentage=6.25, share_class="Common")
+            ]
+            for inv in investors_list:
+                session.add(inv)
+                
+        # Seed Meetings
+        meetings_list = [
+            Meeting(startup_id=s_syntho.id, title="Introductory Call & Pitch Deck Walkthrough", notes="Sarah presented unit economics. Impressive LTV/CAC.", scheduled_at=datetime.utcnow()),
+            Meeting(startup_id=s_quantum.id, title="Technical Deep Dive", notes="Database benchmark discussions. Competes with CockroachDB.", scheduled_at=datetime.utcnow())
+        ]
+        for m in meetings_list:
+            session.add(m)
+            
+        # Seed Comments & Notifications
+        deals_results = await session.execute(select(Deal))
+        deals = deals_results.scalars().all()
+        if deals:
+            c1 = Comment(deal_id=deals[0].id, user_id=user.id, content="Runway looks safe at 14 months. Ready to draft memo.")
+            session.add(c1)
+            
+        n1 = Notification(user_id=user.id, title="New Document Processed", message="SynthoAI pitch deck has been vectorized in Qdrant.")
+        session.add(n1)
 
         await session.commit()
         print("Database seeded successfully!")

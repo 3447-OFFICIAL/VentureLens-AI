@@ -76,3 +76,35 @@ def search_documents(query: str, tenant_id: str, limit: int = 5):
     )
     
     return [hit.payload["text"] for hit in search_result]
+
+def search_documents_with_scores(query: str, tenant_id: str, limit: int = 5):
+    """
+    Search for similar documents in Qdrant based on the query, restricted by tenant,
+    returning detailed payloads, file names, and trust scores.
+    """
+    try:
+        query_vector = embeddings_model.embed_documents([query])[0]
+        search_result = qdrant_client.search(
+            collection_name=COLLECTION_NAME,
+            query_vector=query_vector,
+            query_filter=Filter(
+                must=[
+                    FieldCondition(
+                        key="tenant_id",
+                        match=MatchValue(value=tenant_id)
+                    )
+                ]
+            ),
+            limit=limit
+        )
+        return [
+            {
+                "text": hit.payload["text"],
+                "file_name": hit.payload.get("file_name", "Unknown Source"),
+                "score": round(hit.score, 4)
+            }
+            for hit in search_result
+        ]
+    except Exception as e:
+        print(f"Vector search failed: {e}")
+        return []

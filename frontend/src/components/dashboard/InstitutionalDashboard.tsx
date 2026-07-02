@@ -28,6 +28,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/store/use-auth-store";
 import { useDashboardStore } from "@/lib/store/use-dashboard-store";
+import CompaniesView from "./CompaniesView";
+import DueDiligenceView from "./DueDiligenceView";
+import TasksView from "./TasksView";
+import ReportsView from "./ReportsView";
+import PortfolioView from "./PortfolioView";
+import AnalyticsView from "./AnalyticsView";
+import AlertsView from "./AlertsView";
 
 type Task = {
   id: string;
@@ -162,7 +169,7 @@ export default function InstitutionalDashboard() {
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             const word = line.replace("data: ", "");
-            setChatResponse((prev) => prev + " " + word);
+            setChatResponse((prev) => prev + word);
           }
         }
       }
@@ -232,7 +239,12 @@ export default function InstitutionalDashboard() {
                 ].map((item) => (
                   <button
                     key={item.name}
-                    className="w-full flex items-center justify-between px-3 py-2 text-xs text-slate-400 hover:bg-[#0f141f] hover:text-slate-200 rounded-lg transition-colors cursor-pointer"
+                    onClick={() => setActiveTab(item.name)}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg transition-colors cursor-pointer ${
+                      activeTab === item.name 
+                        ? "bg-[#181f30] text-indigo-400 font-medium" 
+                        : "text-slate-400 hover:bg-[#0f141f] hover:text-slate-200"
+                    }`}
                   >
                     <div className="flex items-center space-x-3">
                       <item.icon className="w-4 h-4 shrink-0" />
@@ -297,157 +309,167 @@ export default function InstitutionalDashboard() {
         <div className="flex-1 flex overflow-hidden">
           
           <main className="flex-1 overflow-y-auto p-6 space-y-6">
-            
-            <div className="flex justify-between items-center flex-wrap gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-white">Good morning, Arjun 👋</h2>
-                <p className="text-xs text-slate-400 mt-1">Here's what's happening with your portfolio and deal flow.</p>
-              </div>
-            </div>
-
-            {/* Metrics Row */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              {[
-                { title: "Deal Flow", val: "24", sub: "New companies", rate: "+33%", color: "#6366f1" },
-                { title: "Under Review", val: "12", sub: "Active diligences", rate: "+20%", color: "#3b82f6" },
-                { title: "Portfolio Value", val: "$128.4M", sub: "Total portfolio value", rate: "▲ 18.7%", color: "#10b981" },
-                { title: "IRR (Net)", val: "24.6%", sub: "Portfolio Net IRR", rate: "▲ 4.3%", color: "#f59e0b" },
-                { title: "Dry Powder", val: "$45.2M", sub: "Available to invest", rate: "▲ 7.2%", color: "#ec4899" }
-              ].map((m, i) => (
-                <div key={i} className="bg-[#0b0e14] border border-[#161c28] rounded-xl p-4 flex flex-col justify-between h-36">
+            {activeTab === "Overview" && (
+              <>
+                <div className="flex justify-between items-center flex-wrap gap-4">
                   <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wide">{m.title}</span>
-                      <span className="text-[10px] text-emerald-400 font-semibold">{m.rate}</span>
-                    </div>
-                    <h3 className="text-xl font-bold text-white mt-2">{m.val}</h3>
-                    <p className="text-[10px] text-slate-500 mt-1">{m.sub}</p>
-                  </div>
-                  <div className="h-8">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={sparkData}>
-                        <defs>
-                          <linearGradient id={`grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={m.color} stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor={m.color} stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <Area type="monotone" dataKey="value" stroke={m.color} strokeWidth={1.5} fill={`url(#grad-${i})`} />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    <h2 className="text-xl font-bold text-white">Good morning, Arjun 👋</h2>
+                    <p className="text-xs text-slate-400 mt-1">Here's what's happening with your portfolio and deal flow.</p>
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* Main Sections depending on active tab */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* Pipeline Overview */}
-              <div className="bg-[#0b0e14] border border-[#161c28] rounded-xl p-5 flex flex-col justify-between">
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-xs font-bold uppercase text-slate-300 tracking-wider">Pipeline Overview</h4>
-                </div>
-                
-                <div className="flex items-center space-x-6 flex-1">
-                  <div className="w-1/2 flex justify-center py-4">
-                    <svg viewBox="0 0 200 160" className="w-48 h-auto">
-                      <polygon points="10,10 190,10 165,30 35,30" fill="#4f46e5" opacity="0.9" />
-                      <polygon points="35,33 165,33 140,55 60,55" fill="#3b82f6" opacity="0.9" />
-                      <polygon points="60,58 140,58 120,80 80,80" fill="#10b981" opacity="0.9" />
-                      <polygon points="80,83 120,83 105,105 95,105" fill="#f59e0b" opacity="0.9" />
-                      <polygon points="95,108 105,108 102,125 98,125" fill="#ec4899" opacity="0.9" />
-                    </svg>
-                  </div>
-                  
-                  <div className="flex-1 space-y-2 text-xs">
-                    {[
-                      { name: "Total Incoming", count: 156, color: "bg-indigo-600" },
-                      { name: "Initial Screening", count: 68, color: "bg-blue-500" },
-                      { name: "Due Diligence", count: 24, color: "bg-emerald-500" },
-                      { name: "Partner Review", count: 12, color: "bg-amber-500" },
-                      { name: "IC Review", count: 6, color: "bg-pink-500" }
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <span className={`w-2 h-2 rounded-full ${item.color}`}></span>
-                          <span className="text-slate-400 text-[10px]">{item.name}</span>
+                {/* Metrics Row */}
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                  {[
+                    { title: "Deal Flow", val: "24", sub: "New companies", rate: "+33%", color: "#6366f1" },
+                    { title: "Under Review", val: "12", sub: "Active diligences", rate: "+20%", color: "#3b82f6" },
+                    { title: "Portfolio Value", val: "$128.4M", sub: "Total portfolio value", rate: "▲ 18.7%", color: "#10b981" },
+                    { title: "IRR (Net)", val: "24.6%", sub: "Portfolio Net IRR", rate: "▲ 4.3%", color: "#f59e0b" },
+                    { title: "Dry Powder", val: "$45.2M", sub: "Available to invest", rate: "▲ 7.2%", color: "#ec4899" }
+                  ].map((m, i) => (
+                    <div key={i} className="bg-[#0b0e14] border border-[#161c28] rounded-xl p-4 flex flex-col justify-between h-36">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wide">{m.title}</span>
+                          <span className="text-[10px] text-emerald-400 font-semibold">{m.rate}</span>
                         </div>
-                        <span className="font-semibold text-[10px]">{item.count}</span>
+                        <h3 className="text-xl font-bold text-white mt-2">{m.val}</h3>
+                        <p className="text-[10px] text-slate-500 mt-1">{m.sub}</p>
                       </div>
-                    ))}
-                  </div>
+                      <div className="h-8">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={sparkData}>
+                            <defs>
+                              <linearGradient id={`grad-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={m.color} stopOpacity={0.4}/>
+                                <stop offset="95%" stopColor={m.color} stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <Area type="monotone" dataKey="value" stroke={m.color} strokeWidth={1.5} fill={`url(#grad-${i})`} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
 
-              {/* Portfolio Health */}
-              <div className="bg-[#0b0e14] border border-[#161c28] rounded-xl p-5 flex flex-col justify-between">
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-xs font-bold uppercase text-slate-300 tracking-wider">Portfolio Health</h4>
-                </div>
-
-                <div className="flex items-center justify-between flex-1">
-                  <div className="relative w-1/2 flex justify-center py-4">
-                    <svg viewBox="0 0 120 120" className="w-36 h-36">
-                      <circle cx="60" cy="60" r="45" fill="none" stroke="#ef4444" strokeWidth="8" strokeDasharray="280" strokeDashoffset="240" strokeLinecap="round" />
-                      <circle cx="60" cy="60" r="45" fill="none" stroke="#f59e0b" strokeWidth="8" strokeDasharray="280" strokeDashoffset="180" strokeLinecap="round" />
-                      <circle cx="60" cy="60" r="45" fill="none" stroke="#3b82f6" strokeWidth="8" strokeDasharray="280" strokeDashoffset="100" strokeLinecap="round" />
-                      <circle cx="60" cy="60" r="45" fill="none" stroke="#10b981" strokeWidth="8" strokeDasharray="280" strokeDashoffset="0" strokeLinecap="round" />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <p className="text-[8px] text-slate-500 uppercase tracking-widest font-bold">Overall Score</p>
-                      <h3 className="text-2xl font-bold text-white mt-1">78</h3>
-                      <p className="text-[9px] text-emerald-400 font-semibold mt-0.5">Good</p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Pipeline Overview */}
+                  <div className="bg-[#0b0e14] border border-[#161c28] rounded-xl p-5 flex flex-col justify-between">
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="text-xs font-bold uppercase text-slate-300 tracking-wider">Pipeline Overview</h4>
+                    </div>
+                    
+                    <div className="flex items-center space-x-6 flex-1">
+                      <div className="w-1/2 flex justify-center py-4">
+                        <svg viewBox="0 0 200 160" className="w-48 h-auto">
+                          <polygon points="10,10 190,10 165,30 35,30" fill="#4f46e5" opacity="0.9" />
+                          <polygon points="35,33 165,33 140,55 60,55" fill="#3b82f6" opacity="0.9" />
+                          <polygon points="60,58 140,58 120,80 80,80" fill="#10b981" opacity="0.9" />
+                          <polygon points="80,83 120,83 105,105 95,105" fill="#f59e0b" opacity="0.9" />
+                          <polygon points="95,108 105,108 102,125 98,125" fill="#ec4899" opacity="0.9" />
+                        </svg>
+                      </div>
+                      
+                      <div className="flex-1 space-y-2 text-xs">
+                        {[
+                          { name: "Total Incoming", count: 156, color: "bg-indigo-600" },
+                          { name: "Initial Screening", count: 68, color: "bg-blue-500" },
+                          { name: "Due Diligence", count: 24, color: "bg-emerald-500" },
+                          { name: "Partner Review", count: 12, color: "bg-amber-500" },
+                          { name: "IC Review", count: 6, color: "bg-pink-500" }
+                        ].map((item, i) => (
+                          <div key={i} className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <span className={`w-2 h-2 rounded-full ${item.color}`}></span>
+                              <span className="text-slate-400 text-[10px]">{item.name}</span>
+                            </div>
+                            <span className="font-semibold text-[10px]">{item.count}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex-1 space-y-2.5 text-xs pl-4">
-                    {[
-                      { name: "Excellent (80-100)", count: 6, color: "bg-emerald-500" },
-                      { name: "Good (60-79)", count: 8, color: "bg-blue-500" },
-                      { name: "Average (40-59)", count: 3, color: "bg-amber-500" },
-                      { name: "At Risk (20-39)", count: 2, color: "bg-orange-500" }
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <span className={`w-2 h-2 rounded-full ${item.color}`}></span>
-                          <span className="text-slate-400 text-[10px]">{item.name}</span>
+                  {/* Portfolio Health */}
+                  <div className="bg-[#0b0e14] border border-[#161c28] rounded-xl p-5 flex flex-col justify-between">
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="text-xs font-bold uppercase text-slate-300 tracking-wider">Portfolio Health</h4>
+                    </div>
+
+                    <div className="flex items-center justify-between flex-1">
+                      <div className="relative w-1/2 flex justify-center py-4">
+                        <svg viewBox="0 0 120 120" className="w-36 h-36">
+                          <circle cx="60" cy="60" r="45" fill="none" stroke="#ef4444" strokeWidth="8" strokeDasharray="280" strokeDashoffset="240" strokeLinecap="round" />
+                          <circle cx="60" cy="60" r="45" fill="none" stroke="#f59e0b" strokeWidth="8" strokeDasharray="280" strokeDashoffset="180" strokeLinecap="round" />
+                          <circle cx="60" cy="60" r="45" fill="none" stroke="#3b82f6" strokeWidth="8" strokeDasharray="280" strokeDashoffset="100" strokeLinecap="round" />
+                          <circle cx="60" cy="60" r="45" fill="none" stroke="#10b981" strokeWidth="8" strokeDasharray="280" strokeDashoffset="0" strokeLinecap="round" />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <p className="text-[8px] text-slate-500 uppercase tracking-widest font-bold">Overall Score</p>
+                          <h3 className="text-2xl font-bold text-white mt-1">78</h3>
+                          <p className="text-[9px] text-emerald-400 font-semibold mt-0.5">Good</p>
                         </div>
-                        <span className="font-semibold text-[10px]">{item.count}</span>
                       </div>
-                    ))}
+
+                      <div className="flex-1 space-y-2.5 text-xs pl-4">
+                        {[
+                          { name: "Excellent (80-100)", count: 6, color: "bg-emerald-500" },
+                          { name: "Good (60-79)", count: 8, color: "bg-blue-500" },
+                          { name: "Average (40-59)", count: 3, color: "bg-amber-500" },
+                          { name: "At Risk (20-39)", count: 2, color: "bg-orange-500" }
+                        ].map((item, i) => (
+                          <div key={i} className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <span className={`w-2 h-2 rounded-full ${item.color}`}></span>
+                              <span className="text-slate-400 text-[10px]">{item.name}</span>
+                            </div>
+                            <span className="font-semibold text-[10px]">{item.count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Startups Table List */}
-            <div className="bg-[#0b0e14] border border-[#161c28] rounded-xl p-5">
-              <h4 className="text-xs font-bold uppercase text-slate-300 tracking-wider mb-4">Startups Under Review</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-[#1c2438] text-slate-500">
-                      <th className="py-3 font-semibold text-[10px] uppercase">Company</th>
-                      <th className="py-3 font-semibold text-[10px] uppercase">Domain</th>
-                      <th className="py-3 font-semibold text-[10px] uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#161c28]/50">
-                    {startups.map((comp) => (
-                      <tr key={comp.id} className="hover:bg-[#0f1421]/30">
-                        <td className="py-3 font-semibold text-slate-200">{comp.name}</td>
-                        <td className="py-3 text-slate-400">{comp.domain}</td>
-                        <td className="py-3">
-                          <button className="text-indigo-400 hover:text-indigo-300 cursor-pointer">Analyze Deck</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                {/* Startups Table List */}
+                <div className="bg-[#0b0e14] border border-[#161c28] rounded-xl p-5">
+                  <h4 className="text-xs font-bold uppercase text-slate-300 tracking-wider mb-4">Startups Under Review</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#1c2438] text-slate-500">
+                          <th className="py-3 font-semibold text-[10px] uppercase">Company</th>
+                          <th className="py-3 font-semibold text-[10px] uppercase">Domain</th>
+                          <th className="py-3 font-semibold text-[10px] uppercase">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#161c28]/50">
+                        {startups.map((comp) => (
+                          <tr key={comp.id} className="hover:bg-[#0f1421]/30">
+                            <td className="py-3 font-semibold text-slate-200">{comp.name}</td>
+                            <td className="py-3 text-slate-400">{comp.domain}</td>
+                            <td className="py-3">
+                              <button onClick={() => setActiveTab("Due Diligence")} className="text-indigo-400 hover:text-indigo-300 cursor-pointer">Analyze Deck</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
 
+            {activeTab === "Companies" && <CompaniesView />}
+            {activeTab === "Due Diligence" && <DueDiligenceView />}
+            {activeTab === "AI Reports" && <ReportsView />}
+            {activeTab === "Investment Memos" && <ReportsView />}
+            {activeTab === "Tasks" && <TasksView />}
+            {activeTab === "Portfolio Companies" && <PortfolioView />}
+            {activeTab === "KPIs & Metrics" && <PortfolioView />}
+            {activeTab === "Analytics" && <AnalyticsView />}
+            {activeTab === "Alerts" && <AlertsView />}
           </main>
 
           {/* Right Sidebar - Live Tasks, Alerts & Streaming Chat */}

@@ -1,4 +1,3 @@
-from ..models.db_models import FinancialMetrics
 from pydantic import BaseModel
 
 class FinancialHealthRequest(BaseModel):

@@ -85,3 +85,7 @@ async def get_me(current_user: UserContext = Depends(get_current_user)):
         "role": current_user.role,
         "organization_id": current_user.organization_id
     }
+
+@router.get("/health")
+async def health_check():
+    return {"status": "healthy"}

@@ -27,10 +27,13 @@ def setup_telemetry(app: FastAPI):
     logging.basicConfig(format="%(message)s", level=logging.INFO)
 
     # 2. Setup OpenTelemetry Tracing
-    # This points to a standard OTLP collector (e.g. Jaeger or Grafana Agent)
-    provider = TracerProvider()
-    processor = BatchSpanProcessor(OTLPSpanExporter())
-    provider.add_span_processor(processor)
-    trace.set_tracer_provider(provider)
-
-    FastAPIInstrumentor.instrument_app(app)
+    import os
+    otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
+    if otlp_endpoint:
+        provider = TracerProvider()
+        processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=otlp_endpoint))
+        provider.add_span_processor(processor)
+        trace.set_tracer_provider(provider)
+        FastAPIInstrumentor.instrument_app(app)
+    else:
+        print("OTEL_EXPORTER_OTLP_ENDPOINT not set. OpenTelemetry tracing exporter disabled.")
