@@ -1,10 +1,6 @@
 from fastapi.testclient import TestClient
 from app.main import app
 
-# Include the new router
-from app.routers import privacy
-app.include_router(privacy.router)
-
 client = TestClient(app)
 
 def test_forget_me_invalid_confirmation():

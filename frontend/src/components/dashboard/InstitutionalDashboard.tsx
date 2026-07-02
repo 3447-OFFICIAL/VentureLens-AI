@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { UploadDocument } from "@/components/UploadDocument";
+import { InvestmentMemo } from "@/components/InvestmentMemo";
 
 export default function InstitutionalDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -25,14 +27,16 @@ export default function InstitutionalDashboard() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-slate-950 text-slate-50 p-6 space-y-6">
-      <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+    <div className="flex flex-col h-full bg-slate-950 text-slate-50 p-6 space-y-6 overflow-y-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-4 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-amber-500">VentureLens Terminal</h1>
           <p className="text-sm text-slate-400">Institutional Intelligence Layer</p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant={activeTab === "overview" ? "default" : "outline"} onClick={() => setActiveTab("overview")}>Overview</Button>
+          <Button variant={activeTab === "documents" ? "default" : "outline"} onClick={() => setActiveTab("documents")}>Documents</Button>
+          <Button variant={activeTab === "memo" ? "default" : "outline"} onClick={() => setActiveTab("memo")}>Due Diligence</Button>
           <Button variant={activeTab === "financials" ? "default" : "outline"} onClick={() => setActiveTab("financials")}>Financials</Button>
           <Button variant={activeTab === "captable" ? "default" : "outline"} onClick={() => setActiveTab("captable")}>Cap Table</Button>
           <Button variant={activeTab === "montecarlo" ? "default" : "outline"} onClick={() => setActiveTab("montecarlo")}>Simulations</Button>
@@ -41,7 +45,7 @@ export default function InstitutionalDashboard() {
 
       {activeTab === "overview" && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-slate-900 border-slate-800">
+          <Card className="bg-slate-900 border-slate-800 text-slate-100">
             <CardHeader>
               <CardTitle className="text-slate-300">Watchlist</CardTitle>
             </CardHeader>
@@ -63,41 +67,41 @@ export default function InstitutionalDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-slate-800">
+          <Card className="bg-slate-900 border-slate-800 text-slate-100">
             <CardHeader>
               <CardTitle className="text-slate-300">Market Alerts</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="bg-slate-800 p-3 rounded text-sm">
+                <div className="bg-slate-800 p-3 rounded text-sm text-slate-300">
                   <span className="text-amber-500 font-bold">[CRUNCHBASE]</span> Acme Corp competitor just raised $50M Series B.
                 </div>
-                <div className="bg-slate-800 p-3 rounded text-sm">
+                <div className="bg-slate-800 p-3 rounded text-sm text-slate-300">
                   <span className="text-sky-500 font-bold">[LINKEDIN]</span> Stark Ind. headcount dropped by 15% this quarter.
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-slate-800">
+          <Card className="bg-slate-900 border-slate-800 text-slate-100">
             <CardHeader>
               <CardTitle className="text-slate-300">Risk Matrix</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-4 text-slate-300">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span>Burn Multiple</span>
                     <span className="text-rose-500">High Risk (3.5x)</span>
                   </div>
-                  <div className="w-full bg-slate-800 h-2 rounded"><div className="bg-rose-500 h-2 rounded w-4/5"></div></div>
+                  <div className="w-full bg-slate-850 h-2 rounded"><div className="bg-rose-500 h-2 rounded w-4/5"></div></div>
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span>Runway</span>
                     <span className="text-amber-500">Medium (8 Months)</span>
                   </div>
-                  <div className="w-full bg-slate-800 h-2 rounded"><div className="bg-amber-500 h-2 rounded w-1/2"></div></div>
+                  <div className="w-full bg-slate-850 h-2 rounded"><div className="bg-amber-500 h-2 rounded w-1/2"></div></div>
                 </div>
               </div>
             </CardContent>
@@ -105,8 +109,20 @@ export default function InstitutionalDashboard() {
         </div>
       )}
 
+      {activeTab === "documents" && (
+        <div className="flex-1 flex items-center justify-center p-4">
+          <UploadDocument />
+        </div>
+      )}
+
+      {activeTab === "memo" && (
+        <div className="flex-1 p-2">
+          <InvestmentMemo />
+        </div>
+      )}
+
       {activeTab === "montecarlo" && (
-        <Card className="bg-slate-900 border-slate-800 flex-1">
+        <Card className="bg-slate-900 border-slate-800 flex-1 text-slate-100">
           <CardHeader>
             <CardTitle className="text-slate-300">Monte Carlo ARR Forecast (10,000 Simulations)</CardTitle>
           </CardHeader>
@@ -141,12 +157,12 @@ export default function InstitutionalDashboard() {
       )}
 
       {activeTab === "captable" && (
-        <Card className="bg-slate-900 border-slate-800 flex-1">
+        <Card className="bg-slate-900 border-slate-800 flex-1 text-slate-100">
           <CardHeader>
             <CardTitle className="text-slate-300">Cap Table & Dilution Modeling</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <h3 className="text-lg font-medium mb-4 text-slate-200">Post-Money Ownership</h3>
                 <div className="space-y-4">
@@ -193,7 +209,7 @@ export default function InstitutionalDashboard() {
       )}
 
       {activeTab === "financials" && (
-        <Card className="bg-slate-900 border-slate-800 flex-1 flex items-center justify-center">
+        <Card className="bg-slate-900 border-slate-800 flex-1 flex items-center justify-center text-slate-100 min-h-[300px]">
           <p className="text-slate-500">Financial models loading...</p>
         </Card>
       )}

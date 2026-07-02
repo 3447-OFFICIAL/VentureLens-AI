@@ -4,9 +4,9 @@ from typing import List
 import os
 import uuid
 import re
-from .storage import storage_service
-from .document_processor import process_document
-from .vector_store import store_document_vectors
+from ..storage import storage_service
+from ..document_processor import process_document
+from ..vector_store import store_document_vectors
 from ..auth import verify_clerk_token, require_role, UserContext
 
 router = APIRouter(

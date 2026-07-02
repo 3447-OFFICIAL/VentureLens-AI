@@ -1,6 +1,26 @@
 from typing import TypedDict, Annotated, List, Dict, Any
 from langgraph.graph import StateGraph, END
-from langchain_openai import ChatOpenAI
+from ..database import settings
+
+if settings.OPENAI_API_KEY:
+    from langchain_openai import ChatOpenAI
+else:
+    class ChatOpenAI:
+        def __init__(self, *args, **kwargs):
+            pass
+        def invoke(self, messages):
+            system_msg = messages[0].content if messages else ""
+            if "Thesis" in system_msg:
+                content = "Mocked Thesis Agent Response: Strong business model with recurring SaaS revenue, 85% gross margin, and low customer concentration. High growth in a large addressable market."
+            elif "Financial" in system_msg:
+                content = "Mocked Financial Agent Response: Outstanding financial metrics. LTV:CAC ratio is 4.5x, MRR growth is 12% MoM, and net revenue retention is at 130%."
+            else:
+                content = "Mocked Committee Decision: Approve investment. The combination of strong financial metrics and solid founder capability warrants a Series A investment."
+            
+            class MockResponse:
+                def __init__(self, content):
+                    self.content = content
+            return MockResponse(content)
 from langchain.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage
 import os

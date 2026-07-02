@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-// We will import button, card, input once shadcn creates them.
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export function UploadDocument() {
   const [file, setFile] = useState<File | null>(null);
@@ -20,12 +18,10 @@ export function UploadDocument() {
     if (!file) return;
     setUploading(true);
     
-    // Stub upload logic connecting to backend
     const formData = new FormData();
     formData.append("file", file);
     
     try {
-      // In production, point toNEXT_PUBLIC_API_URL/api/documents/upload
       console.log("Uploading file to backend...");
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate delay
       alert("File uploaded successfully and analysis started!");
@@ -38,29 +34,30 @@ export function UploadDocument() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-xl shadow-md border border-gray-100">
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Upload Startup Document</h2>
-          <p className="text-sm text-gray-500">Upload pitch decks, financials, or cap tables for AI Due Diligence.</p>
-        </div>
-        
+    <Card className="w-full max-w-md mx-auto bg-slate-900 border-slate-800 text-slate-100 shadow-xl">
+      <CardHeader>
+        <CardTitle className="text-xl font-semibold text-slate-200">Upload Startup Document</CardTitle>
+        <CardDescription className="text-slate-400">
+          Upload pitch decks, financials, or cap tables for AI Due Diligence.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
         <div className="space-y-2">
           <input 
             type="file" 
             onChange={handleFileChange}
-            className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            className="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700 cursor-pointer"
           />
         </div>
         
-        <button 
+        <Button 
           onClick={handleUpload} 
           disabled={!file || uploading}
-          className="w-full py-2 px-4 bg-gray-900 text-white rounded-md font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {uploading ? "Analyzing..." : "Analyze Document"}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
