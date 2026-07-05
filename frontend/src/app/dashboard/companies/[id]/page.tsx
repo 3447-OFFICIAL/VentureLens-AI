@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { 
-  Building2, Users, FileText, Brain, Github, Activity, 
+  Building2, Users, FileText, Brain, Code2, Activity, 
   AlertTriangle, DollarSign, TrendingUp, Save, Search, 
   ExternalLink, CheckCircle2
 } from "lucide-react";
@@ -16,7 +16,7 @@ export default function CompanyWorkspace({ params }: { params: { id: string } })
     { id: "financials", label: "Financials", icon: DollarSign },
     { id: "documents", label: "Documents", icon: FileText },
     { id: "team", label: "Founders & Team", icon: Users },
-    { id: "tech", label: "Tech & GitHub", icon: Github },
+    { id: "tech", label: "Tech & GitHub", icon: Code2 },
     { id: "risk", label: "Risk Analysis", icon: AlertTriangle }
   ];
 

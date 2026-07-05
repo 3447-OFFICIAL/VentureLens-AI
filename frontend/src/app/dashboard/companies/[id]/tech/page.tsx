@@ -1,7 +1,7 @@
 "use client";
 
 import { 
-  Github, ShieldAlert, Cpu, GitBranch, GitCommit,
+  Code2, ShieldAlert, Cpu, GitBranch, GitCommit,
   CheckCircle2, AlertTriangle, AlertCircle, FileCode2,
   Box, Key, Zap, Brain, Activity, Clock
 } from "lucide-react";
@@ -14,7 +14,7 @@ export default function TechAnalysisModule({ params }: { params: { id: string } 
       <div className="bg-card border border-border p-5 rounded-xl flex flex-col md:flex-row justify-between gap-6 items-center">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-geist font-semibold flex items-center gap-2"><Github className="h-6 w-6"/> Tech & Codebase DD</h1>
+            <h1 className="text-2xl font-geist font-semibold flex items-center gap-2"><Code2 className="h-6 w-6"/> Tech & Codebase DD</h1>
           </div>
           <p className="text-sm text-muted-foreground flex items-center gap-2">
             <GitBranch className="h-4 w-4"/> Scanned branch: <code className="text-blue-400 bg-blue-500/10 px-1 py-0.5 rounded">main</code>

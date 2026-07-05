@@ -1,7 +1,7 @@
 "use client";
 
 import { 
-  Users, GraduationCap, Briefcase, Award, Linkedin, Twitter, 
+  Users, GraduationCap, Briefcase, Award, MessageSquare, 
   Brain, AlertTriangle, Network, TrendingUp, History, UserCheck, Activity, Globe
 } from "lucide-react";
 
@@ -150,14 +150,14 @@ export default function FounderAnalysisModule({ params }: { params: { id: string
                <h3 className="font-semibold flex items-center gap-2 mb-4"><Activity className="h-4 w-4" /> Public Reputation</h3>
                <div className="flex flex-col gap-3">
                  <div className="flex items-center gap-3 p-2 bg-zinc-900/50 rounded-lg">
-                   <Twitter className="h-4 w-4 text-blue-400 shrink-0"/>
+                   <MessageSquare className="h-4 w-4 text-blue-400 shrink-0"/>
                    <div>
                      <p className="text-xs font-medium text-foreground">Thought Leader</p>
                      <p className="text-[10px] text-muted-foreground">Active fintech discussions, highly regarded.</p>
                    </div>
                  </div>
                  <div className="flex items-center gap-3 p-2 bg-zinc-900/50 rounded-lg">
-                   <Linkedin className="h-4 w-4 text-blue-600 shrink-0"/>
+                   <Briefcase className="h-4 w-4 text-blue-600 shrink-0"/>
                    <div>
                      <p className="text-xs font-medium text-foreground">Extensive Network</p>
                      <p className="text-[10px] text-muted-foreground">Connected to 15+ top-tier VC partners.</p>
