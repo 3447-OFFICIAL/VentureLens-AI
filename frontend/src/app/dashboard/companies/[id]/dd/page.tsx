@@ -1,14 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  ShieldCheck, DollarSign, Code2, Lock, Scale, 
-  Globe2, Leaf, CheckSquare, Clock, FileCheck, 
-  Brain, FileText, ChevronRight, Activity, Paperclip,
-  CheckCircle2, AlertTriangle, AlertCircle
-} from "lucide-react";
+import { ShieldCheck, DollarSign, Code2, Lock, Scale, Globe2, Leaf, CheckSquare, Clock, FileCheck, Brain, FileText, Paperclip, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
 
-export default function DueDiligenceModule({ params }: { params: { id: string } }) {
+export default function DueDiligenceModule() {
   const [activeCategory, setActiveCategory] = useState("financial");
 
   const categories = [

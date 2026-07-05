@@ -1,13 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  Building2, Users, FileText, Brain, Code2, Activity, 
-  AlertTriangle, DollarSign, TrendingUp, Save, Search, 
-  ExternalLink, CheckCircle2
-} from "lucide-react";
+import { Building2, Users, FileText, Brain, Code2, Activity, AlertTriangle, DollarSign, Save } from "lucide-react";
 
-export default function CompanyWorkspace({ params }: { params: { id: string } }) {
+export default function CompanyWorkspace() {
   const [activeTab, setActiveTab] = useState("overview");
   
   // Tabs configuration

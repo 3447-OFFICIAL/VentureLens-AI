@@ -6,7 +6,6 @@ from ..models.user import User
 from ..models.tenant import Tenant
 from ..models.schemas import UserCreate, UserLogin, Token
 from ..core.security import get_password_hash, verify_password, create_access_token
-import uuid
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

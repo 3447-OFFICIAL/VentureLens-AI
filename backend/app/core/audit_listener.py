@@ -1,5 +1,4 @@
 from sqlalchemy import event
-from sqlalchemy.orm import Session
 from app.models.base import Base
 from app.models.audit import AuditLog
 from app.core.database import current_tenant_id
@@ -33,7 +32,7 @@ def track_changes(mapper, connection, target):
     
     # We would write this to the audit_logs table via the active connection
     # For a full implementation, we queue this or write it efficiently.
-    audit_record = AuditLog(
+    AuditLog(
         tenant_id=tenant,
         actor_id=user,
         action=action,

@@ -1,10 +1,6 @@
 "use client";
 
-import { 
-  Search, Brain, Building2, FileText, Briefcase, 
-  Command, Clock, Pin, Filter, FileType, FileSpreadsheet,
-  ArrowRight, FolderOpen, PieChart, Sparkles, SlidersHorizontal
-} from "lucide-react";
+import { Search, Brain, Building2, Briefcase, Command, Clock, Pin, FileType, FileSpreadsheet, ArrowRight, PieChart, Sparkles, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 
 export default function GlobalSearchModule() {

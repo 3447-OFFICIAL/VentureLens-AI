@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, UploadFile, File, Form
+from fastapi.responses import StreamingResponse
+import asyncio
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -14,8 +16,7 @@ class ChatQuery(BaseModel):
     company_id: str
     query: str
 
-from fastapi.responses import StreamingResponse
-import asyncio
+
 
 async def fake_token_generator():
     tokens = ["Based", " on", " the", " Q3", " financials,", " the", " burn", " rate", " is", " $450k/month."]

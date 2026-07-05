@@ -1,10 +1,6 @@
 "use client";
 
-import { 
-  Brain, Send, FileText, CheckCircle2, Loader2, Download, AlertCircle,
-  MessageSquare, Plus, History, Settings, MoreHorizontal, BookOpen,
-  Link2, Link, Hash, Building2
-} from "lucide-react";
+import { Brain, Send, FileText, CheckCircle2, Loader2, Plus, BookOpen, Link2, Link, Hash, Building2 } from "lucide-react";
 import { useState } from "react";
 
 export default function PerplexityAIModule() {
@@ -69,7 +65,7 @@ export default function PerplexityAIModule() {
                 
                 {/* User Query */}
                 <div className="text-2xl font-geist font-semibold">
-                  What is Acme Corp's projected runway given their current Q3 burn rate, and how does this compare to FinSync?
+                  What is Acme Corp&apos;s projected runway given their current Q3 burn rate, and how does this compare to FinSync?
                 </div>
 
                 {/* Processing Steps (Reasoning) */}
@@ -146,7 +142,7 @@ export default function PerplexityAIModule() {
                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Follow-up Questions</h4>
                      <div className="flex flex-col gap-2">
                        <button className="text-xs text-left p-2 bg-zinc-900/50 hover:bg-zinc-800 rounded-lg text-blue-400 transition-colors">
-                         What is Acme's CAC payback period compared to FinSync?
+                         What is Acme&apos;s CAC payback period compared to FinSync?
                        </button>
                        <button className="text-xs text-left p-2 bg-zinc-900/50 hover:bg-zinc-800 rounded-lg text-blue-400 transition-colors">
                          Show me the customer concentration risk for Acme.

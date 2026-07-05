@@ -1,5 +1,4 @@
 from sqlalchemy import Column, String, Boolean
-from sqlalchemy.dialects.postgresql import UUID
 from .base import Base, SoftDeleteMixin
 
 class User(SoftDeleteMixin, Base):

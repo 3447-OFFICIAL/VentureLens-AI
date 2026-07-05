@@ -1,10 +1,6 @@
 "use client";
 
-import { 
-  Bell, Check, Settings, Mail, Smartphone, 
-  MessageSquare, Circle, AlertCircle, FileText,
-  Clock, Hash, MoreHorizontal, CheckCircle2, SlidersHorizontal
-} from "lucide-react";
+import { Bell, Mail, Smartphone, MessageSquare, AlertCircle, FileText, Clock, Hash, MoreHorizontal, CheckCircle2, SlidersHorizontal, Users } from "lucide-react";
 import { useState } from "react";
 
 export default function NotificationCenterModule() {

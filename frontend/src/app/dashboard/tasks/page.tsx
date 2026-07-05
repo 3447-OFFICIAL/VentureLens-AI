@@ -1,10 +1,6 @@
 "use client";
 
-import { 
-  CheckSquare, Calendar, User, Tag, Flag, 
-  MessageSquare, Zap, Clock, Bell, MoreHorizontal,
-  ChevronDown, Search, Filter, Plus, Send, AlertTriangle, Paperclip
-} from "lucide-react";
+import { CheckSquare, Calendar, User, Tag, Flag, MessageSquare, Zap, Bell, MoreHorizontal, Search, Filter, Plus, Send, Paperclip } from "lucide-react";
 import { useState } from "react";
 
 export default function TaskManagementModule() {
@@ -175,7 +171,7 @@ export default function TaskManagementModule() {
                         <span className="text-sm font-semibold">Elena Smith</span>
                         <span className="text-[10px] text-muted-foreground">Yesterday, 4:22 PM</span>
                       </div>
-                      <p className="text-sm text-zinc-300">Hey <span className="text-blue-400 font-medium">@JD</span>, I've uploaded the actuals. Let me know if you need the raw bank extracts.</p>
+                      <p className="text-sm text-zinc-300">Hey <span className="text-blue-400 font-medium">@JD</span>, I&apos;ve uploaded the actuals. Let me know if you need the raw bank extracts.</p>
                     </div>
                   </div>
                 </div>

@@ -1,8 +1,5 @@
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
-import hashlib
-import json
 
 class IdempotencyMiddleware(BaseHTTPMiddleware):
     """
@@ -21,9 +18,9 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         # but document the hashing mechanism.
         
         # Hash the key + user_id for multi-tenant safety
-        user_context = getattr(request.state, "user", "anonymous")
-        hash_key = hashlib.sha256(f"{idem_key}:{user_context}".encode()).hexdigest()
-        redis_key = f"idempotency:{hash_key}"
+        # user_context = getattr(request.state, "user", "anonymous")
+        # hash_key = hashlib.sha256(f"{idem_key}:{user_context}".encode()).hexdigest()
+        # redis_key = f"idempotency:{hash_key}"
         
         # MOCK: if redis_client.exists(redis_key):
         #    cached_response = redis_client.get(redis_key)

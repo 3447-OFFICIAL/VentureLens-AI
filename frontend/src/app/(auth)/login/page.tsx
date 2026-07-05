@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -64,7 +64,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            Don't have an account? <Link href="/signup" className="text-foreground hover:underline font-medium">Request Access</Link>
+            Don&apos;t have an account? <Link href="/signup" className="text-foreground hover:underline font-medium">Request Access</Link>
           </div>
         </div>
       </div>

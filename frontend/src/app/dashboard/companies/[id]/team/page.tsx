@@ -1,11 +1,8 @@
 "use client";
 
-import { 
-  Users, GraduationCap, Briefcase, Award, MessageSquare, 
-  Brain, AlertTriangle, Network, TrendingUp, History, UserCheck, Activity, Globe
-} from "lucide-react";
+import { GraduationCap, Briefcase, Award, MessageSquare, Brain, AlertTriangle, Network, TrendingUp, History, UserCheck, Activity, Globe, AlertCircle, CheckCircle2 } from "lucide-react";
 
-export default function FounderAnalysisModule({ params }: { params: { id: string } }) {
+export default function FounderAnalysisModule() {
   return (
     <div className="flex flex-col h-full w-full space-y-6">
       

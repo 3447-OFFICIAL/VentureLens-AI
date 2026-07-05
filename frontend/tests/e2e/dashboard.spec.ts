@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('VentureLens AI Dashboard', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({}) => {
     // Mock login or intercept API calls here
     // await page.goto('http://localhost:3000/auth/login');
   });
 
-  test('should display the main pipeline dashboard', async ({ page }) => {
+  test('should display the main pipeline dashboard', async ({}) => {
     await page.goto('http://localhost:3000/dashboard');
     
     // Check if the sidebar and main navigation exist
@@ -14,7 +14,7 @@ test.describe('VentureLens AI Dashboard', () => {
     await expect(page.getByText('Deal Pipeline')).toBeVisible();
   });
 
-  test('should open the AI Copilot modal', async ({ page }) => {
+  test('should open the AI Copilot modal', async ({}) => {
     await page.goto('http://localhost:3000/dashboard');
     
     // Simulate opening the global search / AI command bar

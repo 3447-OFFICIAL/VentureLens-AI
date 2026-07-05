@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Shield, Zap, Brain, CheckCircle2, LayoutDashboard, Search, Lock, Code2 } from "lucide-react";
+import { ArrowRight, Shield, Brain, CheckCircle2, LayoutDashboard, Search, Lock, Code2 } from "lucide-react";
 
 export default function LandingPage() {
   return (
@@ -126,7 +126,7 @@ export default function LandingPage() {
                   <div className="flex gap-4 p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
                     <div className="h-8 w-8 rounded-full bg-purple-500 flex items-center justify-center shrink-0"><Brain className="h-4 w-4 text-white"/></div>
                     <div>
-                      <p className="text-sm text-purple-100 mb-2">Acme Corp's current burn rate is $450k/mo. With $5.2M in cash, runway is ~11.5 months.</p>
+                      <p className="text-sm text-purple-100 mb-2">Acme Corp&apos;s current burn rate is $450k/mo. With $5.2M in cash, runway is ~11.5 months.</p>
                       <span className="text-xs text-purple-400 font-mono bg-purple-500/20 px-2 py-1 rounded">Source: Q3_Financials.pdf (Page 4)</span>
                     </div>
                   </div>

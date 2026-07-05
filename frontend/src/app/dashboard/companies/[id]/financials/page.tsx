@@ -1,12 +1,8 @@
 "use client";
 
-import { 
-  TrendingUp, TrendingDown, DollarSign, Activity, 
-  BarChart3, RefreshCw, AlertCircle, Brain, Target, 
-  LineChart, FileSpreadsheet, Download
-} from "lucide-react";
+import { TrendingUp, TrendingDown, BarChart3, RefreshCw, Brain, Target, FileSpreadsheet, Download } from "lucide-react";
 
-export default function FinancialAnalysisModule({ params }: { params: { id: string } }) {
+export default function FinancialAnalysisModule() {
   return (
     <div className="flex flex-col h-full w-full space-y-6">
       

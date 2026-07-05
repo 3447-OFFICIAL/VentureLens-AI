@@ -4,9 +4,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/a
 
 export class APIError extends Error {
   status: number;
-  data: any;
+  data?: Record<string, unknown>;
 
-  constructor(status: number, message: string, data?: any) {
+  constructor(status: number, message: string, data?: Record<string, unknown>) {
     super(message);
     this.status = status;
     this.data = data;
@@ -47,7 +47,7 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
 
 export const api = {
   get: (endpoint: string, options?: RequestInit) => fetchWithAuth(endpoint, { ...options, method: 'GET' }).then(res => res.json()),
-  post: (endpoint: string, data: any, options?: RequestInit) => fetchWithAuth(endpoint, { ...options, method: 'POST', body: JSON.stringify(data) }).then(res => res.json()),
-  put: (endpoint: string, data: any, options?: RequestInit) => fetchWithAuth(endpoint, { ...options, method: 'PUT', body: JSON.stringify(data) }).then(res => res.json()),
+  post: (endpoint: string, data: Record<string, unknown>, options?: RequestInit) => fetchWithAuth(endpoint, { ...options, method: 'POST', body: JSON.stringify(data) }).then(res => res.json()),
+  put: (endpoint: string, data: Record<string, unknown>, options?: RequestInit) => fetchWithAuth(endpoint, { ...options, method: 'PUT', body: JSON.stringify(data) }).then(res => res.json()),
   delete: (endpoint: string, options?: RequestInit) => fetchWithAuth(endpoint, { ...options, method: 'DELETE' }).then(res => res.json()),
 };

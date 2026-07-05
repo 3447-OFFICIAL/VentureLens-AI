@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from ..core.database import get_db
 from ..api.deps import get_current_user
 from ..models.user import User
-from ..models.billing import Subscription, Invoice
+from ..models.billing import Subscription
 from ..core.stripe import create_checkout_session, create_billing_portal_session
 from ..core.config import settings
 
@@ -71,9 +71,9 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         event = stripe.Webhook.construct_event(
             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
         )
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(status_code=400, detail="Invalid payload")
-    except stripe.error.SignatureVerificationError as e:
+    except stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
     # Handle the event

@@ -13,7 +13,7 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-geist font-semibold tracking-tight text-foreground">Overview</h1>
-          <p className="text-muted-foreground text-sm">Welcome back. Here's what's happening across your firm.</p>
+          <p className="text-muted-foreground text-sm">Welcome back. Here&apos;s what&apos;s happening across your firm.</p>
         </div>
         <div className="flex items-center gap-3">
           <button className="p-2 border border-border bg-card rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">

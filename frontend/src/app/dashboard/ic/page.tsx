@@ -1,11 +1,6 @@
 "use client";
 
-import { 
-  Users, Calendar, Clock, CheckCircle2, XCircle, 
-  MinusCircle, FileText, Paperclip, MessageSquare, 
-  History, Brain, ThumbsUp, ThumbsDown, ChevronRight,
-  MoreVertical, FileCheck, Share2
-} from "lucide-react";
+import { Users, Calendar, Clock, MinusCircle, FileText, Paperclip, MessageSquare, History, Brain, ThumbsUp, ThumbsDown, FileCheck, Share2 } from "lucide-react";
 
 export default function InvestmentCommitteeModule() {
   return (
@@ -157,13 +152,13 @@ export default function InvestmentCommitteeModule() {
               <div className="bg-black/40 p-3 rounded-lg border border-white/5">
                 <p className="text-purple-300 text-xs font-semibold mb-1">Meeting Context Synthesized</p>
                 <p className="text-zinc-300 text-xs leading-relaxed">
-                  I've reviewed the v2.4 memo and all 4 attachments. Notably, the revised financial model (Attachment 3) updated the runway projection from 9 months to 11 months based on lower CAC assumptions.
+                  I&apos;ve reviewed the v2.4 memo and all 4 attachments. Notably, the revised financial model (Attachment 3) updated the runway projection from 9 months to 11 months based on lower CAC assumptions.
                 </p>
               </div>
               <div className="bg-black/40 p-3 rounded-lg border border-white/5">
                 <p className="text-emerald-400 text-xs font-semibold mb-1">Suggested Question for Founder</p>
                 <p className="text-zinc-300 text-xs leading-relaxed">
-                  "How does the engineering team plan to execute the AWS abstraction layer without disrupting the Q1 feature roadmap?"
+                  &quot;How does the engineering team plan to execute the AWS abstraction layer without disrupting the Q1 feature roadmap?&quot;
                 </p>
               </div>
             </div>
@@ -191,7 +186,7 @@ export default function InvestmentCommitteeModule() {
                      <span className="text-sm font-semibold">John Doe</span>
                      <span className="text-[10px] text-muted-foreground">10:14 AM</span>
                    </div>
-                   <p className="text-sm text-zinc-300">I'm comfortable with the valuation, but I want AK's read on the Series A term sheet regarding the anti-dilution provisions.</p>
+                   <p className="text-sm text-zinc-300">I&apos;m comfortable with the valuation, but I want AK&apos;s read on the Series A term sheet regarding the anti-dilution provisions.</p>
                  </div>
                </div>
 
@@ -202,7 +197,7 @@ export default function InvestmentCommitteeModule() {
                      <span className="text-sm font-semibold">Alice Kim</span>
                      <span className="text-[10px] text-muted-foreground">10:18 AM</span>
                    </div>
-                   <p className="text-sm text-zinc-300">Standard broad-based weighted average. Nothing unusual. I've uploaded the marked-up copy to attachments.</p>
+                   <p className="text-sm text-zinc-300">Standard broad-based weighted average. Nothing unusual. I&apos;ve uploaded the marked-up copy to attachments.</p>
                  </div>
                </div>
 
@@ -213,7 +208,7 @@ export default function InvestmentCommitteeModule() {
                      <span className="text-sm font-semibold">Elena Smith</span>
                      <span className="text-[10px] text-muted-foreground">10:22 AM</span>
                    </div>
-                   <p className="text-sm text-zinc-300">Great. I'm a Yes. Voting now.</p>
+                   <p className="text-sm text-zinc-300">Great. I&apos;m a Yes. Voting now.</p>
                  </div>
                </div>
 

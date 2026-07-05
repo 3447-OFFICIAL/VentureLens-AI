@@ -1,13 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { 
-  Search, Plus, Filter, MoreHorizontal, MessageSquare, 
-  Paperclip, Users, CheckCircle2, AlertCircle, Zap, Activity, Clock
-} from "lucide-react";
+import { Search, Plus, Filter, MoreHorizontal, MessageSquare, CheckCircle2, AlertCircle, Zap, Activity } from "lucide-react";
 
 export default function PipelinePage() {
-  const [view, setView] = useState("kanban");
+
   
   const stages = [
     { id: "lead", name: "Sourcing", count: 24, color: "bg-zinc-800" },

@@ -8,7 +8,6 @@ from .specialists.agents import (
 from .synthesis.agents import (
     CriticAgent, ReviewerAgent, CommitteeAgent, MemoAgent
 )
-from ..core.config import settings
 
 class AIAgentCoordinator:
     """
@@ -56,7 +55,7 @@ class AIAgentCoordinator:
         # Step 2: QA & Review Pipeline
         print(f"[{self.tenant_id}] Running QA and Thesis Review...")
         critic_res = await self.critic.invoke("Review the aggregated findings for hallucinations or contradictions.", context)
-        reviewer_res = await self.reviewer.invoke("Ensure these findings meet our fund's strict criteria.", context)
+        await self.reviewer.invoke("Ensure these findings meet our fund's strict criteria.", context)
         
         # Step 3: Committee Simulation
         print(f"[{self.tenant_id}] Simulating IC Committee Debate...")

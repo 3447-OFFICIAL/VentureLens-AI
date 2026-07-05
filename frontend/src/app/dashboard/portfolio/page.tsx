@@ -224,7 +224,7 @@ export default function PortfolioModule() {
                 </div>
                 <div className="text-sm bg-black/40 p-3 rounded-lg border border-white/5">
                   <p className="text-rose-400 text-xs font-semibold mb-1">Mark-down Risk</p>
-                  <p className="text-zinc-300 text-xs">PayData's burn multiple has exceeded 3.5x. AI advises a 20% mark-down for Q3 reporting if bridge funding is not secured by month end.</p>
+                  <p className="text-zinc-300 text-xs">PayData&apos;s burn multiple has exceeded 3.5x. AI advises a 20% mark-down for Q3 reporting if bridge funding is not secured by month end.</p>
                 </div>
               </div>
               <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Brain className="h-32 w-32" /></div>

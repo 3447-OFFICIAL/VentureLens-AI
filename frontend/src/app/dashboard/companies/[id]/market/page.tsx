@@ -1,12 +1,8 @@
 "use client";
 
-import { 
-  Globe2, Target, Crosshair, TrendingUp, Users2, 
-  DollarSign, Brain, Shield, Swords, Activity,
-  ArrowUpRight, ArrowDownRight, Minus
-} from "lucide-react";
+import { Globe2, Target, Crosshair, TrendingUp, Brain, Swords, Activity, ArrowUpRight, ArrowDownRight, AlertTriangle } from "lucide-react";
 
-export default function MarketAnalysisModule({ params }: { params: { id: string } }) {
+export default function MarketAnalysisModule() {
   return (
     <div className="flex flex-col h-full w-full space-y-6">
       
@@ -28,7 +24,7 @@ export default function MarketAnalysisModule({ params }: { params: { id: string 
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
         
-        {/* Left Col (Market Size, Competitors, Porter's Five Forces) */}
+        {/* Left Col (Market Size, Competitors, Porter&apos;s Five Forces) */}
         <div className="lg:col-span-8 space-y-6 flex flex-col">
           
           {/* Market Sizing (TAM/SAM/SOM) */}
@@ -95,9 +91,9 @@ export default function MarketAnalysisModule({ params }: { params: { id: string 
             </table>
           </div>
 
-          {/* Porter's Five Forces */}
+          {/* Porter&apos;s Five Forces */}
           <div className="bg-card border border-border p-5 rounded-xl">
-             <h3 className="font-semibold mb-4">Porter's Five Forces</h3>
+             <h3 className="font-semibold mb-4">Porter&apos;s Five Forces</h3>
              <div className="grid grid-cols-5 gap-2 text-center text-xs">
                <div className="bg-zinc-900/50 p-3 rounded-lg border border-border">
                  <p className="font-semibold mb-2">Rivalry</p>

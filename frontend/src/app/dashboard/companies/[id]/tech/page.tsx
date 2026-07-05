@@ -1,12 +1,8 @@
 "use client";
 
-import { 
-  Code2, ShieldAlert, Cpu, GitBranch, GitCommit,
-  CheckCircle2, AlertTriangle, AlertCircle, FileCode2,
-  Box, Key, Zap, Brain, Activity, Clock
-} from "lucide-react";
+import { Code2, ShieldAlert, Cpu, GitBranch, GitCommit, AlertTriangle, AlertCircle, FileCode2, Box, Key, Brain, Clock } from "lucide-react";
 
-export default function TechAnalysisModule({ params }: { params: { id: string } }) {
+export default function TechAnalysisModule() {
   return (
     <div className="flex flex-col h-full w-full space-y-6">
       
