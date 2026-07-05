@@ -1,8 +1,0 @@
-# Global owners
-*       @venturelens-ai/core-team
-
-# Backend specific owners
-/backend/  @venturelens-ai/backend-maintainers
-
-# Frontend specific owners
-/frontend/ @venturelens-ai/frontend-maintainers
