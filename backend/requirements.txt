@@ -10,3 +10,4 @@ celery
 qdrant-client
 python-jose[cryptography]
 passlib[bcrypt]
+openai

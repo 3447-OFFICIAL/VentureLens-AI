@@ -1,0 +1,58 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: venturelens-api
+  namespace: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: venturelens-api
+  template:
+    metadata:
+      labels:
+        app: venturelens-api
+    spec:
+      containers:
+        - name: fastapi
+          image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/venturelens-api:latest
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          envFrom:
+            - secretRef:
+                name: venturelens-secrets
+  strategy:
+    canary:
+      steps:
+      - setWeight: 20
+      # Pause indefinitely, wait for manual promotion via ArgoCD UI
+      - pause: {}
+      - setWeight: 50
+      - pause: {duration: 10m}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: venturelens-api-hpa
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
+    name: venturelens-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
