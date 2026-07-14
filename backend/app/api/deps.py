@@ -22,6 +22,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         email: str = payload.get("sub")
+        tenant_id = payload.get("tenant_id")
         if email is None:
             raise credentials_exception
     except JWTError:
@@ -32,5 +33,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
     if user is None:
         raise credentials_exception
         
+    import uuid
+    from ..core.database import current_tenant_id
+    
+    # Attach tenant_id dynamically from JWT to the user context
+    user.tenant_id = uuid.UUID(tenant_id) if tenant_id else None
+    current_tenant_id.set(user.tenant_id)
+        
     return user
+
 

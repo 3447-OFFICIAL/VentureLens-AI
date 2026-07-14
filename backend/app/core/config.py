@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Database
-    DATABASE_URL: str = "postgresql+psycopg2://user:password@localhost:5432/venturelens"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./dev.db"
     
     # Auth
     SECRET_KEY: str = "DEV_SECRET_DO_NOT_USE_IN_PROD"

@@ -46,7 +46,7 @@ export default function PipelinePage() {
       setLoading(true);
       setError("");
       
-      const res = await fetch("http://localhost:8000/api/v1/deals/", {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/deals/", {
         headers: { "Authorization": `Bearer ${token}` }
       });
       
@@ -74,7 +74,7 @@ export default function PipelinePage() {
     setCreating(true);
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:8000/api/v1/deals/", {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/deals/", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -105,7 +105,7 @@ export default function PipelinePage() {
   const handleMoveStage = async (dealId: string, targetStage: string) => {
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:8000/api/v1/deals/${dealId}`, {
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/deals/${dealId}`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",

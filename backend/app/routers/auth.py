@@ -53,8 +53,14 @@ async def login(user_in: UserLogin, db: AsyncSession = Depends(get_db_unbound)):
     if not user or not verify_password(user_in.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
     
+    from ..models.auth import OrganizationUsers
+    org_result = await db.execute(select(OrganizationUsers).filter(OrganizationUsers.user_id == user.id))
+    org_mapping = org_result.scalars().first()
+    user.tenant_id = org_mapping.tenant_id if org_mapping else None
+    
     access_token = create_access_token(data={"sub": user.email, "tenant_id": str(user.tenant_id)})
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 @router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)):

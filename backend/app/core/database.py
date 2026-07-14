@@ -23,8 +23,9 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         tenant_id = current_tenant_id.get()
         
-        if tenant_id:
-            # Enforce RLS at the database level for this transaction
+        if tenant_id and session.bind.dialect.name == 'postgresql':
+            # Enforce RLS at the database level for this transaction (PostgreSQL only)
             await session.execute(text("SET LOCAL rls.tenant_id = :tenant_id"), {"tenant_id": tenant_id})
         
         yield session
+

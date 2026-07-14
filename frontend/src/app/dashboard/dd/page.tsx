@@ -3,24 +3,122 @@
 import React, { useState } from "react";
 import { 
   ClipboardList, Search, Filter, Plus, Calendar, CheckSquare, 
-  ChevronRight, Users, Play, Clock, BarChart3, AlertCircle
+  ChevronRight, Users, Play, Clock, BarChart3, AlertCircle, X, CheckCircle
 } from "lucide-react";
 import Link from "next/link";
 
+interface DDItem {
+  id: string;
+  company: string;
+  stage: string;
+  progress: number;
+  owner: string;
+  started: string;
+  due: string;
+  next: string;
+  color: string;
+  subtasks: { id: string; name: string; done: boolean }[];
+}
+
 export default function DueDiligenceDashboard() {
   const [activeTab, setActiveTab] = useState("in_progress");
+  const [selectedDD, setSelectedDD] = useState<DDItem | null>(null);
   
-  const ddItems = [
-    { company: "SynthAI", stage: "Financial DD", status: "in_progress", progress: 78, owner: "Riya Shah", started: "May 10, 2026", due: "Jun 10, 2026", next: "Review Financials", color: "from-blue-500 to-indigo-500" },
-    { company: "QuantumDB", stage: "Technical DD", status: "in_progress", progress: 89, owner: "Karan Patel", started: "May 24, 2026", due: "Jun 11, 2026", next: "Code Review", color: "from-blue-500 to-emerald-500" },
-    { company: "Nemora Labs", stage: "Market DD", status: "in_progress", progress: 45, owner: "Neha Gupta", started: "May 22, 2026", due: "Jun 12, 2026", next: "Market Analysis", color: "from-blue-500 to-amber-500" },
-    { company: "EcoMove", stage: "Legal DD", status: "in_progress", progress: 30, owner: "Karan Patel", started: "May 20, 2026", due: "Jun 13, 2026", next: "Review Contacts", color: "from-blue-500 to-orange-500" },
-    { company: "Vectora", stage: "Financial DD", status: "in_progress", progress: 49, owner: "Arjun Mehta", started: "May 24, 2026", due: "Jun 14, 2026", next: "Unit Economics", color: "from-blue-500 to-indigo-500" },
-    { company: "HealthSync", stage: "Technical DD", status: "in_progress", progress: 20, owner: "Karan Patel", started: "May 23, 2026", due: "Jun 15, 2026", next: "Security Review", color: "from-blue-500 to-emerald-500" }
-  ];
+  const [ddItems, setDdItems] = useState<DDItem[]>([
+    {
+      id: "synthai",
+      company: "SynthAI",
+      stage: "Financial DD",
+      progress: 75,
+      owner: "Riya Shah",
+      started: "May 10, 2026",
+      due: "Jun 10, 2026",
+      next: "Review Financials",
+      color: "from-blue-500 to-indigo-500",
+      subtasks: [
+        { id: "1", name: "Q1-Q3 Profit & Loss Audit", done: true },
+        { id: "2", name: "Customer Concentration Ledger", done: true },
+        { id: "3", name: "Tax Audit Compliance", done: true },
+        { id: "4", name: "3-Year Projections Audit", done: false }
+      ]
+    },
+    {
+      id: "quantumdb",
+      company: "QuantumDB",
+      stage: "Technical DD",
+      progress: 80,
+      owner: "Karan Patel",
+      started: "May 24, 2026",
+      due: "Jun 11, 2026",
+      next: "Code Review",
+      color: "from-blue-500 to-emerald-500",
+      subtasks: [
+        { id: "1", name: "Database Scale Benchmarking", done: true },
+        { id: "2", name: "Security Penetration Audit", done: true },
+        { id: "3", name: "Open Source Licensing Audit", done: true },
+        { id: "4", name: "Architecture & Code Review", done: false }
+      ]
+    },
+    {
+      id: "nemora",
+      company: "Nemora Labs",
+      stage: "Market DD",
+      progress: 40,
+      owner: "Neha Gupta",
+      started: "May 22, 2026",
+      due: "Jun 12, 2026",
+      next: "Market Analysis",
+      color: "from-blue-500 to-amber-500",
+      subtasks: [
+        { id: "1", name: "TAM Analysis", done: true },
+        { id: "2", name: "Competitor Matrix Mapping", done: false },
+        { id: "3", name: "Customer Interviews (x5)", done: false },
+        { id: "4", name: "Pricing Model Benchmark", done: false }
+      ]
+    },
+    {
+      id: "ecomove",
+      company: "EcoMove",
+      stage: "Legal DD",
+      progress: 25,
+      owner: "Karan Patel",
+      started: "May 20, 2026",
+      due: "Jun 13, 2026",
+      next: "Review Contacts",
+      color: "from-blue-500 to-orange-500",
+      subtasks: [
+        { id: "1", name: "Articles of Incorporation", done: true },
+        { id: "2", name: "Key Customer Contracts Review", done: false },
+        { id: "3", name: "Employee IP Assignments", done: false },
+        { id: "4", name: "Litigation Disclosure Verification", done: false }
+      ]
+    }
+  ]);
+
+  const handleToggleSubtask = (ddId: string, subtaskId: string) => {
+    setDdItems(prev => prev.map(item => {
+      if (item.id !== ddId) return item;
+      
+      const newSubtasks = item.subtasks.map(st => st.id === subtaskId ? { ...st, done: !st.done } : st);
+      const doneCount = newSubtasks.filter(st => st.done).length;
+      const newProgress = Math.round((doneCount / newSubtasks.length) * 100);
+      
+      const updatedItem = {
+        ...item,
+        subtasks: newSubtasks,
+        progress: newProgress
+      };
+      
+      if (selectedDD && selectedDD.id === ddId) {
+        setSelectedDD(updatedItem);
+      }
+      
+      return updatedItem;
+    }));
+  };
 
   return (
-    <div className="flex flex-col h-full w-full space-y-6 text-zinc-300 font-sans">
+    <div className="flex flex-col h-full w-full space-y-6 text-zinc-300 font-sans relative">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -34,39 +132,8 @@ export default function DueDiligenceDashboard() {
 
       {/* Navigation and Toolbar */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-zinc-900 pb-2">
-        {/* Tabs */}
         <div className="flex gap-4">
-          {[
-            { id: "pipeline", label: "Pipeline" },
-            { id: "in_progress", label: "In Progress" },
-            { id: "completed", label: "Completed" },
-            { id: "on_held", label: "On Held" }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`pb-3 text-xs font-bold border-b-2 transition-all relative ${
-                activeTab === tab.id 
-                  ? "border-blue-500 text-blue-400 font-bold" 
-                  : "border-transparent text-zinc-500 hover:text-zinc-300"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Buttons */}
-        <div className="flex items-center gap-3">
-          <button className="text-[11px] text-blue-400 font-semibold hover:underline flex items-center gap-1.5 mr-2">
-            <Calendar className="h-3.5 w-3.5" /> View Calendar
-          </button>
-          <button className="flex items-center gap-2 px-3 py-1.5 border border-zinc-800 bg-zinc-900 text-zinc-300 rounded-lg text-xs font-semibold hover:bg-zinc-800">
-            <Filter className="h-3.5 w-3.5" /> Filters
-          </button>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:opacity-90">
-            <Plus className="h-3.5 w-3.5" /> New DD
-          </button>
+          <button className="pb-3 text-xs font-bold border-b-2 border-blue-500 text-blue-400">In Progress</button>
         </div>
       </div>
 
@@ -116,7 +183,12 @@ export default function DueDiligenceDashboard() {
                     <span className="text-[10px] text-zinc-200 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded font-medium">{item.next}</span>
                   </td>
                   <td className="py-3.5 px-5 text-right">
-                    <button className="text-xs text-blue-400 font-semibold hover:underline">View</button>
+                    <button 
+                      onClick={() => setSelectedDD(item)}
+                      className="text-xs text-blue-400 font-semibold hover:underline"
+                    >
+                      View
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -125,21 +197,66 @@ export default function DueDiligenceDashboard() {
         </div>
       </div>
 
-      {/* Metrics on bottom */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "In Progress", val: "6", desc: "Active diligence modules", color: "border-blue-500/20 bg-blue-500/5 text-blue-400" },
-          { label: "Completed", val: "2", desc: "This quarter", color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400" },
-          { label: "On Held", val: "1", desc: "Requires founder info", color: "border-amber-500/20 bg-amber-500/5 text-amber-400" },
-          { label: "Avg. Days to Complete", val: "18", desc: "From kickoff to IC memo", color: "border-zinc-800 bg-zinc-900/20 text-zinc-400" }
-        ].map((m, i) => (
-          <div key={i} className={`p-4 border rounded-xl flex flex-col justify-between ${m.color}`}>
-            <span className="text-[10px] font-bold tracking-wider uppercase opacity-70">{m.label}</span>
-            <div className="text-2xl font-extrabold font-geist mt-2 text-white">{m.val}</div>
-            <p className="text-[10px] opacity-60 mt-1">{m.desc}</p>
+      {/* Due Diligence Checklist Modal */}
+      {selectedDD && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedDD(null)} />
+          
+          <div className="relative bg-zinc-950 border border-zinc-800 p-6 rounded-xl shadow-2xl w-full max-w-lg z-10 space-y-5">
+            <div className="flex justify-between items-center border-b border-zinc-900 pb-3">
+              <div>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">{selectedDD.company} - {selectedDD.stage}</h3>
+                <p className="text-[10px] text-zinc-500 mt-0.5">Toggle subtasks below to recalculate overall diligence progress.</p>
+              </div>
+              <button onClick={() => setSelectedDD(null)} className="text-zinc-500 hover:text-zinc-300"><X className="h-4.5 w-4.5" /></button>
+            </div>
+            
+            {/* Progress indicator */}
+            <div className="bg-zinc-900/30 border border-zinc-900 p-4 rounded-lg flex items-center justify-between">
+              <span className="text-xs text-zinc-400 font-semibold">Total Progress</span>
+              <div className="flex items-center gap-3">
+                <div className="w-32 h-2 bg-zinc-950 rounded-full overflow-hidden">
+                  <div className={`h-full bg-gradient-to-r ${selectedDD.color} rounded-full`} style={{ width: `${selectedDD.progress}%` }} />
+                </div>
+                <span className="text-xs font-bold font-mono text-white">{selectedDD.progress}%</span>
+              </div>
+            </div>
+
+            {/* Checkable Subtasks list */}
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Subtask Checklist</h4>
+              <div className="divide-y divide-zinc-900 border border-zinc-900 rounded-lg overflow-hidden bg-zinc-900/10">
+                {selectedDD.subtasks.map(st => (
+                  <div 
+                    key={st.id} 
+                    onClick={() => handleToggleSubtask(selectedDD.id, st.id)}
+                    className="p-3.5 flex items-center gap-3 hover:bg-zinc-900/30 transition-colors cursor-pointer"
+                  >
+                    <input 
+                      type="checkbox" 
+                      checked={st.done}
+                      readOnly
+                      className="size-4 rounded border-zinc-800 bg-zinc-950 text-blue-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className={`text-xs font-semibold ${st.done ? "line-through text-zinc-500" : "text-zinc-200"}`}>
+                      {st.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-zinc-900 flex justify-end">
+              <button 
+                onClick={() => setSelectedDD(null)}
+                className="px-4 py-2 bg-blue-600 hover:opacity-90 text-white rounded-lg text-xs font-semibold"
+              >
+                Done
+              </button>
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
     </div>
   );

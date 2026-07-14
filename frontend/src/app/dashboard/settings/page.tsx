@@ -16,7 +16,7 @@ export default function SettingsModule() {
       try {
         const token = localStorage.getItem("access_token");
         if (!token) return;
-        const res = await fetch("http://localhost:8000/api/v1/auth/me", {
+        const res = await fetch("http://127.0.0.1:8000/api/v1/auth/me", {
           headers: { "Authorization": `Bearer ${token}` }
         });
         if (res.ok) {

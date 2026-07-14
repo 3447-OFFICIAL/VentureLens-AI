@@ -2,72 +2,105 @@
 
 import React, { useEffect, useState } from "react";
 import { 
-  Building2, Search, Filter, Plus, CheckCircle2, ChevronRight, 
-  ArrowRight, Sparkles, SlidersHorizontal, Loader2
+  Building2, Search, Plus, CheckCircle2, ChevronRight, 
+  Sparkles, SlidersHorizontal, Loader2, X
 } from "lucide-react";
 import Link from "next/link";
 
+interface Company {
+  id: string;
+  name: string;
+  stage: string;
+  sector: string;
+  website: string | null;
+  description: string | null;
+  metadata_blob: {
+    runway?: string;
+    owner?: string;
+    health?: number;
+  };
+}
+
 export default function CompaniesModule() {
-  const [companies, setCompanies] = useState([
-    { id: "synthai", name: "SynthAI", stage: "Series A", status: "Active", health: 84, arr: "$12.4M", runway: "14 mo", owner: "Arjun Mehta", updated: "2h ago" },
-    { id: "quantumdb", name: "QuantumDB", stage: "Series Seed", status: "Active", health: 88, arr: "$3.2M", runway: "18 mo", owner: "Riya Shah", updated: "1d ago" },
-    { id: "nemora", name: "Nemora Labs", stage: "Seed", status: "DD", health: 72, arr: "$1.1M", runway: "12 mo", owner: "Karen Patel", updated: "2d ago" },
-    { id: "vectora", name: "Vectora", stage: "Seed", status: "DD", health: 68, arr: "$2.4M", runway: "10 mo", owner: "Arjun Mehta", updated: "2d ago" },
-    { id: "greenlyst", name: "Greenlyst", stage: "Pre-Seed", status: "Screening", health: 64, arr: "$0.7M", runway: "16 mo", owner: "Neha Gupta", updated: "2d ago" },
-    { id: "healthsync", name: "HealthSync", stage: "Seed", status: "Active", health: 75, arr: "$2.1M", runway: "16 mo", owner: "Riya Shah", updated: "2d ago" },
-    { id: "urbanstash", name: "UrbanStash", stage: "Seed", status: "DD", health: 58, arr: "$1.4M", runway: "8 mo", owner: "Neha Gupta", updated: "2d ago" },
-    { id: "payflow", name: "PayFlow", stage: "Seed", status: "Active", health: 56, arr: "$1.8M", runway: "11 mo", owner: "Karen Patel", updated: "2d ago" },
-    { id: "finflow", name: "FinFlow", stage: "Seed", status: "Screening", health: 60, arr: "$0.5M", runway: "7 mo", owner: "Riya Shah", updated: "2d ago" }
-  ]);
-  
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  
+  // Add Company Modal State
+  const [modalOpen, setModalOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newStage, setNewStage] = useState("Seed");
+  const [newSector, setNewSector] = useState("B2B SaaS / Fintech");
+  const [newOwner, setNewOwner] = useState("Arjun Mehta");
+  const [creating, setCreating] = useState(false);
+
+  const fetchCompanies = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setError("Please login first.");
+        return;
+      }
+      setLoading(true);
+      setError("");
+      
+      const res = await fetch("http://127.0.0.1:8000/api/v1/companies/", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to load companies.");
+      
+      const data = await res.json();
+      setCompanies(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadBackendData() {
-      try {
-        const token = localStorage.getItem("access_token");
-        if (!token) return;
-        setLoading(true);
-        const res = await fetch("http://localhost:8000/api/v1/deals/", {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.length > 0) {
-            // Map backend deals to company items
-            const backendCompanies = data.map((d: any) => ({
-              id: d.company_id,
-              name: d.company_name,
-              stage: d.stage,
-              status: d.stage === "Closed" ? "Active" : "DD",
-              health: Math.floor(Math.random() * 30) + 60, // random health for demo
-              arr: `$${(d.amount / 1000000).toFixed(1)}M`,
-              runway: "12 mo",
-              owner: "Me",
-              updated: "Just now"
-            }));
-            
-            // Deduplicate companies by name
-            const allCompanies = [...companies];
-            backendCompanies.forEach((bc: any) => {
-              if (!allCompanies.some(c => c.name.toLowerCase() === bc.name.toLowerCase())) {
-                allCompanies.unshift(bc);
-              }
-            });
-            setCompanies(allCompanies);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load backend deals", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadBackendData();
+    fetchCompanies();
   }, []);
 
+  const handleCreateCompany = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName.trim()) return;
+
+    setCreating(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch("http://127.0.0.1:8000/api/v1/companies/", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: newName,
+          stage: newStage,
+          sector: newSector,
+          metadata_blob: {
+            owner: newOwner,
+            runway: "12 mo",
+            health: 75
+          }
+        })
+      });
+
+      if (!res.ok) throw new Error("Failed to create company.");
+      
+      setNewName("");
+      setModalOpen(false);
+      await fetchCompanies();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full w-full space-y-6 text-zinc-300 font-sans">
+    <div className="flex flex-col h-full w-full space-y-6 text-zinc-300 font-sans relative">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -98,23 +131,22 @@ export default function CompaniesModule() {
             <option>Seed</option>
             <option>Pre-Seed</option>
           </select>
-
-          <select className="bg-zinc-900 border border-zinc-800 rounded-lg text-xs px-3 py-2 text-zinc-400 focus:outline-none focus:border-blue-500">
-            <option>All Status</option>
-            <option>Active</option>
-            <option>DD</option>
-            <option>Screening</option>
-          </select>
-
-          <button className="flex items-center gap-2 px-3 py-2 border border-zinc-800 bg-zinc-900 text-zinc-300 rounded-lg text-xs font-semibold hover:bg-zinc-800">
-            <SlidersHorizontal className="h-3.5 w-3.5" /> More Filters
-          </button>
         </div>
 
-        <button className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity">
+        <button 
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity"
+        >
           <Plus className="h-3.5 w-3.5" /> Add Company
         </button>
       </div>
+
+      {/* Error state */}
+      {error && (
+        <div className="p-3 text-xs bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-lg font-semibold">
+          {error}
+        </div>
+      )}
 
       {/* Companies List Table */}
       <div className="bg-zinc-950/40 border border-border/40 rounded-xl overflow-hidden">
@@ -134,61 +166,129 @@ export default function CompaniesModule() {
                   <th className="py-3 px-4">ARR</th>
                   <th className="py-3 px-4">Runway</th>
                   <th className="py-3 px-4">Owner</th>
-                  <th className="py-3 px-4">Last Updated</th>
                   <th className="py-3 px-5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {companies.map((c, i) => (
-                  <tr key={i} className="border-b border-zinc-900/40 hover:bg-zinc-900/20 last:border-0">
-                    <td className="py-3.5 px-5 font-semibold text-white flex items-center gap-2">
-                      <div className="size-6 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-bold text-white">{c.name.charAt(0)}</div>
-                      <Link href={`/dashboard/companies/${c.id}`} className="hover:underline hover:text-blue-400">
-                        {c.name}
-                      </Link>
-                    </td>
-                    <td className="py-3.5 px-4 text-zinc-400 font-medium">{c.stage}</td>
-                    <td className="py-3.5 px-4">
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
-                        c.status === "Active" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                        c.status === "DD" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" :
-                        "bg-zinc-800 text-zinc-400 border-zinc-700"
-                      }`}>{c.status}</span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
-                        c.health >= 80 ? "text-emerald-400 border-emerald-400/20 bg-emerald-500/10" :
-                        c.health >= 65 ? "text-blue-400 border-blue-400/20 bg-blue-500/10" :
-                        "text-amber-400 border-amber-400/20 bg-amber-500/10"
-                      }`}>{c.health}</span>
-                    </td>
-                    <td className="py-3.5 px-4 text-zinc-200 font-mono font-medium">{c.arr}</td>
-                    <td className="py-3.5 px-4 text-zinc-400 font-medium">{c.runway}</td>
-                    <td className="py-3.5 px-4 text-zinc-300 font-medium">{c.owner}</td>
-                    <td className="py-3.5 px-4 text-zinc-500 font-medium">{c.updated}</td>
-                    <td className="py-3.5 px-5 text-right">
-                      <Link href={`/dashboard/companies/${c.id}`} className="inline-flex items-center gap-1 text-[11px] text-blue-400 font-semibold hover:underline">
-                        Diligence <ChevronRight className="h-3 w-3" />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {companies.map((c, i) => {
+                  const health = c.metadata_blob.health || 70;
+                  return (
+                    <tr key={i} className="border-b border-zinc-900/40 hover:bg-zinc-900/20 last:border-0">
+                      <td className="py-3.5 px-5 font-semibold text-white flex items-center gap-2">
+                        <div className="size-6 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-bold text-white">{c.name.charAt(0)}</div>
+                        <Link href={`/dashboard/companies/${c.id}`} className="hover:underline hover:text-blue-400">
+                          {c.name}
+                        </Link>
+                      </td>
+                      <td className="py-3.5 px-4 text-zinc-400 font-medium">{c.stage}</td>
+                      <td className="py-3.5 px-4">
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border bg-blue-500/10 text-blue-400 border-blue-500/20">Active</span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                          health >= 80 ? "text-emerald-400 border-emerald-400/20 bg-emerald-500/10" :
+                          health >= 65 ? "text-blue-400 border-blue-400/20 bg-blue-500/10" :
+                          "text-amber-400 border-amber-400/20 bg-amber-500/10"
+                        }`}>{health}</span>
+                      </td>
+                      <td className="py-3.5 px-4 text-zinc-200 font-mono font-medium">$1.5M</td>
+                      <td className="py-3.5 px-4 text-zinc-400 font-medium">{c.metadata_blob.runway || "12 mo"}</td>
+                      <td className="py-3.5 px-4 text-zinc-300 font-medium">{c.metadata_blob.owner || "Unassigned"}</td>
+                      <td className="py-3.5 px-5 text-right">
+                        <Link href={`/dashboard/companies/${c.id}`} className="inline-flex items-center gap-1 text-[11px] text-blue-400 font-semibold hover:underline">
+                          Diligence <ChevronRight className="h-3 w-3" />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
         </div>
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-between items-center text-xs text-zinc-500 font-medium bg-zinc-950/20 p-4 border border-zinc-900/60 rounded-xl">
-        <span>Showing 1 to {companies.length} of 24 companies</span>
-        <div className="flex items-center gap-1">
-          <button className="px-2.5 py-1.5 rounded border border-zinc-800 bg-zinc-900 text-zinc-300 font-bold hover:bg-zinc-800">1</button>
-          <button className="px-2.5 py-1.5 rounded border border-transparent hover:bg-zinc-900/40 text-zinc-500 hover:text-zinc-300 font-bold">2</button>
-          <button className="px-2.5 py-1.5 rounded border border-transparent hover:bg-zinc-900/40 text-zinc-500 hover:text-zinc-300 font-bold">3</button>
-          <button className="px-2.5 py-1.5 rounded border border-transparent hover:bg-zinc-900/40 text-zinc-500 hover:text-zinc-300 font-bold">&gt;</button>
+      {/* Add Company Modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
+          
+          <div className="relative bg-zinc-950 border border-zinc-800 p-6 rounded-xl shadow-2xl w-full max-w-md z-10 space-y-4">
+            <div className="flex justify-between items-center border-b border-zinc-900 pb-3">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Add New Company</h3>
+              <button onClick={() => setModalOpen(false)} className="text-zinc-500 hover:text-zinc-300"><X className="h-4.5 w-4.5" /></button>
+            </div>
+            
+            <form onSubmit={handleCreateCompany} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs text-zinc-500 font-bold">Company Name</label>
+                <input 
+                  type="text" 
+                  required
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg text-xs px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  placeholder="e.g. SynthAI"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs text-zinc-500 font-bold">Stage</label>
+                  <select 
+                    value={newStage}
+                    onChange={(e) => setNewStage(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg text-xs px-3 py-2 text-zinc-400 focus:outline-none"
+                  >
+                    <option value="Seed">Seed</option>
+                    <option value="Series A">Series A</option>
+                    <option value="Series B">Series B</option>
+                    <option value="Pre-Seed">Pre-Seed</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs text-zinc-500 font-bold">Sector</label>
+                  <input 
+                    type="text"
+                    value={newSector}
+                    onChange={(e) => setNewSector(e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg text-xs px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs text-zinc-500 font-bold">Lead Owner</label>
+                <input 
+                  type="text"
+                  value={newOwner}
+                  onChange={(e) => setNewOwner(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg text-xs px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-zinc-900 flex justify-end gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="px-4 py-2 border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 rounded-lg text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={creating}
+                  className="px-4 py-2 bg-blue-600 hover:opacity-90 disabled:opacity-50 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5"
+                >
+                  {creating ? <Loader2 className="animate-spin h-3.5 w-3.5" /> : null}
+                  <span>Create Company</span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
 
     </div>
   );

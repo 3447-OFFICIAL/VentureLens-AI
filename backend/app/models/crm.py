@@ -40,3 +40,32 @@ class Document(SoftDeleteMixin, Base):
     s3_url = Column(String, nullable=False)
     doc_type = Column(String) # Financial, Tech, Legal
     status = Column(String, default="Uploaded") # Processing, Indexed, Failed
+
+class Task(SoftDeleteMixin, Base):
+    __tablename__ = "tasks"
+    __table_args__ = (
+        Index('ix_task_tenant_id', 'tenant_id', 'id'),
+    )
+    
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
+    title = Column(String, nullable=False)
+    priority = Column(String, default="Medium") # High, Medium, Low
+    status = Column(String, default="todo") # todo, in_progress, done
+    due = Column(String)
+    assignee = Column(String)
+    company = Column(String)
+    comments = Column(JSON, default=[]) # list of comment dicts
+
+class Memo(SoftDeleteMixin, Base):
+    __tablename__ = "memos"
+    __table_args__ = (
+        Index('ix_memo_tenant_id', 'tenant_id', 'id'),
+    )
+    
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
+    company_name = Column(String, nullable=False)
+    title = Column(String, nullable=False)
+    status = Column(String, default="Draft") # Draft, In Review, Final
+    score = Column(Float, default=0.0)
+    owner = Column(String)
+
