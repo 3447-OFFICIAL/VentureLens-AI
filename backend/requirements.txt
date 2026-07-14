@@ -9,10 +9,8 @@ redis
 celery
 qdrant-client
 python-jose[cryptography]
-passlib[bcrypt]
 openai
 aiosqlite
 email-validator
 python-multipart
-stripe
 slowapi
