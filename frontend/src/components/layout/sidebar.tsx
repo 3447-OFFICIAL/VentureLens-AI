@@ -6,28 +6,75 @@ import { usePathname } from 'next/navigation';
 import { motion, Variants } from 'framer-motion';
 import { 
   LayoutDashboard, 
-  Briefcase, 
-  Files, 
-  Bot, 
-  Settings 
+  Building2, 
+  CheckSquare, 
+  FileText, 
+  FileJson, 
+  Calendar,
+  Layers,
+  BarChart3,
+  Activity,
+  Bell,
+  Settings,
+  Users,
+  Database,
+  Link2,
+  Bot
 } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
   
-  const navItems = [
-    { label: 'Pipeline', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Portfolio', href: '/portfolio', icon: Briefcase },
-    { label: 'Documents', href: '/documents', icon: Files },
-    { label: 'AI Copilot', href: '/ai', icon: Bot },
-    { label: 'Settings', href: '/settings', icon: Settings },
+  const sections = [
+    {
+      title: 'DEAL FLOW',
+      items: [
+        { label: 'Overview', href: '/dashboard', icon: LayoutDashboard, exact: true },
+        { label: 'Companies', href: '/dashboard/companies', icon: Building2 },
+        { label: 'Due Diligence', href: '/dashboard/dd', icon: CheckSquare },
+        { label: 'AI Reports', href: '/dashboard/reports', icon: FileText },
+        { label: 'Investment Memos', href: '/dashboard/memos', icon: FileJson },
+        { label: 'Tasks', href: '/dashboard/tasks', icon: Calendar },
+      ]
+    },
+    {
+      title: 'PORTFOLIO',
+      items: [
+        { label: 'Portfolio Companies', href: '/dashboard/portfolio', icon: Layers },
+        { label: 'KPIs & Metrics', href: '/dashboard/kpis', icon: BarChart3 },
+        { label: 'Analytics', href: '/dashboard/analytics', icon: Activity },
+        { label: 'Alerts', href: '/dashboard/alerts', icon: Bell },
+      ]
+    },
+    {
+      title: 'INVESTMENT COMMITTEE',
+      items: [
+        { label: 'Committee Decks', href: '/dashboard/ic?tab=decks', icon: FileJson },
+        { label: 'Meetings', href: '/dashboard/ic?tab=meetings', icon: Calendar },
+        { label: 'Decisions', href: '/dashboard/ic?tab=decisions', icon: CheckSquare },
+      ]
+    },
+    {
+      title: 'DATA & INTEGRATIONS',
+      items: [
+        { label: 'Data Rooms', href: '/dashboard/search?tab=rooms', icon: Database },
+        { label: 'Integrations', href: '/dashboard/search?tab=integrations', icon: Link2 },
+      ]
+    },
+    {
+      title: 'ADMIN',
+      items: [
+        { label: 'Users & Teams', href: '/dashboard/settings?tab=users', icon: Users },
+        { label: 'Settings', href: '/dashboard/settings', icon: Settings, exact: true },
+      ]
+    }
   ];
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.05 }
+      transition: { staggerChildren: 0.03 }
     }
   };
 
@@ -37,63 +84,75 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 flex-shrink-0 border-r border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex flex-col z-20">
-      <div className="h-16 flex items-center px-6 border-b border-border/50">
+    <aside className="w-64 flex-shrink-0 border-r border-border/40 bg-zinc-950 flex flex-col z-20 text-zinc-400 select-none">
+      <div className="h-16 flex flex-col justify-center px-6 border-b border-border/40 bg-zinc-950/50">
         <motion.div 
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 font-semibold text-lg tracking-tight"
+          className="flex items-center gap-2.5 font-geist font-bold text-base text-foreground tracking-tight"
         >
-          <div className="size-6 bg-primary rounded-[6px] flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-            <span className="text-primary-foreground text-xs font-bold">V</span>
+          <div className="size-6 bg-blue-600 rounded-[6px] flex items-center justify-center shadow-[0_0_12px_rgba(37,99,235,0.4)]">
+            <span className="text-white text-xs font-bold font-mono">V</span>
           </div>
-          VentureLens AI
+          <div className="flex flex-col">
+            <span className="leading-tight text-zinc-100 font-semibold text-sm">VentureLens AI</span>
+            <span className="text-[10px] text-zinc-500 font-medium tracking-wide">AI Due Diligence Copilot</span>
+          </div>
         </motion.div>
       </div>
       
-      <motion.nav 
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="flex-1 py-6 px-3 space-y-1"
-      >
-        {navItems.map((item) => {
-          const isActive = pathname?.startsWith(item.href);
-          return (
-            <motion.div key={item.href} variants={itemVariants}>
-              <Link 
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 group ${
-                  isActive 
-                    ? 'bg-primary/10 text-primary shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }`}
-              >
-                <item.icon className={`size-4 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                {item.label}
-              </Link>
-            </motion.div>
-          );
-        })}
-      </motion.nav>
+      <div className="flex-1 overflow-y-auto py-4 px-3 space-y-5 custom-scrollbar">
+        <motion.nav 
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+          className="space-y-5"
+        >
+          {sections.map((section, idx) => (
+            <div key={idx} className="space-y-1">
+              <h4 className="px-3 text-[10px] font-bold tracking-wider text-zinc-600 uppercase font-geist">
+                {section.title}
+              </h4>
+              <div className="space-y-0.5">
+                {section.items.map((item) => {
+                  const isActive = item.exact 
+                    ? pathname === item.href 
+                    : pathname?.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard');
+                  
+                  return (
+                    <motion.div key={item.href} variants={itemVariants}>
+                      <Link 
+                        href={item.href}
+                        className={`flex items-center gap-3 px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-150 group ${
+                          isActive 
+                            ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20' 
+                            : 'border border-transparent hover:text-zinc-200 hover:bg-zinc-900/40'
+                        }`}
+                      >
+                        <item.icon className={`size-3.5 transition-transform duration-200 ${isActive ? 'scale-105 text-blue-400' : 'text-zinc-500 group-hover:scale-105'}`} />
+                        {item.label}
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </motion.nav>
+      </div>
       
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="p-4 border-t border-border/50"
+        transition={{ delay: 0.2 }}
+        className="p-4 border-t border-border/40 bg-zinc-950/80"
       >
-        <div className="bg-muted/30 rounded-xl p-4 shadow-sm ring-1 ring-border/50 backdrop-blur-sm">
-          <p className="font-semibold text-foreground text-sm mb-1 tracking-tight">Pro Plan</p>
-          <p className="text-muted-foreground text-xs mb-3">4,500 / 10,000 AI Credits</p>
-          <div className="w-full bg-background rounded-full h-1.5 ring-1 ring-border/50 overflow-hidden">
-            <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: '45%' }}
-              transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
-              className="bg-primary h-full rounded-full shadow-[0_0_10px_rgba(59,130,246,0.8)]" 
-            />
+        <div className="bg-zinc-900/40 border border-border/40 rounded-lg p-3 shadow-inner relative overflow-hidden">
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-semibold text-zinc-200 text-xs tracking-tight">VentureLens AI</span>
           </div>
+          <p className="text-zinc-500 text-[10px] leading-tight">Enterprise Plan Active</p>
         </div>
       </motion.div>
     </aside>

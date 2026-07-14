@@ -1,224 +1,392 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
 import { 
-  TrendingUp, Wallet, CheckSquare, Calendar, Bell, Brain, 
-  BarChart3, Activity, Zap, FileText, LayoutGrid, Search 
+  TrendingUp, TrendingDown, Wallet, CheckSquare, Calendar, Bell, Brain, 
+  BarChart3, Activity, Zap, FileText, LayoutGrid, Search, ArrowRight,
+  ShieldAlert, AlertTriangle, AlertCircle, Building2, Flame, HelpCircle
 } from "lucide-react";
 
 export default function DashboardPage() {
+  const [dealCount, setDealCount] = useState(24);
+  const [userName, setUserName] = useState("Arjun");
+  
+  useEffect(() => {
+    async function fetchUserData() {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+        
+        // Fetch profile
+        const userRes = await fetch("http://localhost:8000/api/v1/auth/me", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (userData && userData.email) {
+            const emailPrefix = userData.email.split("@")[0];
+            setUserName(emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
+          }
+        }
+        
+        // Fetch deals
+        const dealsRes = await fetch("http://localhost:8000/api/v1/deals/", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (dealsRes.ok) {
+          const data = await dealsRes.json();
+          if (data && data.length > 0) {
+            setDealCount(data.length);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load overview data", err);
+      }
+    }
+    fetchUserData();
+  }, []);
+
   return (
-    <div className="flex flex-col space-y-6 h-full w-full">
+    <div className="flex flex-col space-y-6 w-full pb-10 text-zinc-300 font-sans">
       
-      {/* Top Header & Quick Actions */}
+      {/* Header & Metric Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-geist font-semibold tracking-tight text-foreground">Overview</h1>
-          <p className="text-muted-foreground text-sm">Welcome back. Here&apos;s what&apos;s happening across your firm.</p>
+          <h1 className="text-2xl font-bold font-geist tracking-tight text-white flex items-center gap-2">
+            Good morning, {userName} <span className="animate-pulse">🖐️</span>
+          </h1>
+          <p className="text-zinc-500 text-xs mt-1">Here&apos;s what&apos;s happening with your portfolio and deal flow.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="p-2 border border-border bg-card rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
-            <Search className="h-4 w-4" />
-          </button>
-          <button className="p-2 border border-border bg-card rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground relative">
-            <Bell className="h-4 w-4" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-blue-500"></span>
-          </button>
-          <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
-            <Zap className="h-4 w-4" /> New Deal
+        <div className="flex items-center gap-2 bg-zinc-950 p-1 border border-zinc-900 rounded-lg">
+          {["7D", "30D", "90D", "1Y"].map((t) => (
+            <button 
+              key={t}
+              className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-colors ${
+                t === "30D" ? "bg-zinc-800 text-white" : "text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+          <button className="px-3 py-1 text-[11px] font-semibold text-zinc-500 hover:text-zinc-300 border-l border-zinc-900 ml-1">
+            Customize
           </button>
         </div>
       </div>
 
-      {/* Main Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 w-full pb-8">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {[
+          { label: "Deal Flow", val: `${dealCount}`, sub: "New companies", change: "+33%", desc: "vs last 30 days", trend: "up", icon: LayoutGrid },
+          { label: "Under Review", val: "12", sub: "Active diligences", change: "+20%", desc: "vs last 30 days", trend: "up", icon: Activity },
+          { label: "Portfolio Value", val: "$128.4M", sub: "Total portfolio value", change: "+18.7%", desc: "vs last 30 days", trend: "up", icon: Wallet },
+          { label: "IRR (Net)", val: "24.6%", sub: "Portfolio Net IRR", change: "+4.3%", desc: "vs last 30 days", trend: "up", icon: TrendingUp },
+          { label: "Dry Powder", val: "$45.2M", sub: "Available to invest", change: "+7.2%", desc: "vs last 30 days", trend: "up", icon: Zap }
+        ].map((kpi, i) => (
+          <div key={i} className="p-4 bg-zinc-950/40 border border-border/40 rounded-xl flex flex-col justify-between hover:border-zinc-800 transition-colors">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase">{kpi.label}</span>
+                <kpi.icon className="h-3.5 w-3.5 text-zinc-500" />
+              </div>
+              <div className="text-2xl font-bold font-geist text-white">{kpi.val}</div>
+              <span className="text-[10px] text-zinc-500 font-medium">{kpi.sub}</span>
+            </div>
+            <div className="flex items-center gap-1.5 mt-3 text-[10px] font-semibold text-emerald-500">
+              <TrendingUp className="h-3 w-3" />
+              <span>{kpi.change}</span>
+              <span className="text-zinc-500 font-normal">{kpi.desc}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Middle Dashboard Layout Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left Column (Main Stats & Portfolio) */}
-        <div className="md:col-span-8 flex flex-col gap-6">
+        {/* Pipeline Overview Funnel */}
+        <div className="lg:col-span-4 bg-zinc-950/40 border border-border/40 p-5 rounded-xl flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Pipeline Overview</h3>
+            <span className="text-[10px] bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded text-zinc-400">30 Days</span>
+          </div>
           
-          {/* KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="flex flex-col gap-2.5 my-4">
             {[
-              { label: "Total AUM", value: "$420.5M", change: "+12.4%", trend: "up", icon: Wallet },
-              { label: "Active Deals", value: "34", change: "+4", trend: "up", icon: LayoutGrid },
-              { label: "Tasks Due", value: "12", change: "-2", trend: "down", icon: CheckSquare },
-              { label: "Avg IRR", value: "24.8%", change: "+1.2%", trend: "up", icon: TrendingUp }
-            ].map((kpi, i) => (
-              <div key={i} className="p-5 bg-card border border-border rounded-xl flex flex-col hover:border-zinc-700 transition-colors cursor-default group">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.label}</span>
-                  <kpi.icon className="h-4 w-4 text-zinc-500 group-hover:text-blue-400 transition-colors" />
-                </div>
-                <div className="text-2xl font-bold font-geist">{kpi.value}</div>
-                <div className={`text-xs font-medium mt-1 ${kpi.trend === 'up' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {kpi.change} from last month
+              { stage: "Total Incoming", count: 156, color: "bg-blue-600/30 border-blue-500/40" },
+              { stage: "Initial Screening", count: 68, color: "bg-blue-600/50 border-blue-500/60" },
+              { stage: "Due Diligence", count: 24, color: "bg-blue-600/70 border-blue-500/80" },
+              { stage: "Partner Review", count: 12, color: "bg-blue-600 border-blue-500" },
+              { stage: "IC Review", count: 6, color: "bg-indigo-600 border-indigo-500" },
+              { stage: "Term Sheet", count: 3, color: "bg-violet-600 border-violet-500" }
+            ].map((f, i) => (
+              <div key={i} className="flex items-center gap-4 text-xs">
+                <span className="w-24 text-zinc-500 font-medium">{f.stage}</span>
+                <div className="flex-1 h-5 bg-zinc-900 rounded-md overflow-hidden border border-zinc-900">
+                  <div className={`h-full ${f.color} rounded-sm flex items-center px-2 transition-all duration-500`} style={{ width: `${(f.count / 156) * 100}%` }}>
+                    <span className="text-[10px] font-mono text-white font-semibold">{f.count}</span>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Charts (Portfolio & Pipeline) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-5 bg-card border border-border rounded-xl min-h-[300px] flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10"><BarChart3 className="h-32 w-32" /></div>
-              <h3 className="text-sm font-semibold text-foreground mb-1 relative z-10">Portfolio Growth</h3>
-              <p className="text-xs text-muted-foreground mb-4 relative z-10">MoM Valuation (Simulated)</p>
-              <div className="flex-1 flex items-end gap-2 mt-auto relative z-10">
-                 {/* Fake Chart Bars */}
-                 {[40, 50, 45, 60, 75, 65, 80, 95].map((h, i) => (
-                   <div key={i} className="flex-1 bg-blue-500/20 hover:bg-blue-500/50 transition-colors rounded-t-sm" style={{height: `${h}%`}}></div>
-                 ))}
-              </div>
-            </div>
-            
-            <div className="p-5 bg-card border border-border rounded-xl min-h-[300px] flex flex-col">
-              <h3 className="text-sm font-semibold text-foreground mb-1">Deal Funnel</h3>
-              <p className="text-xs text-muted-foreground mb-6">Current active pipeline</p>
-              <div className="flex flex-col gap-3 flex-1 justify-center">
-                 {/* Funnel Rows */}
-                 {[
-                   {stage: "Sourcing", val: 145, w: "100%", c: "bg-zinc-800"},
-                   {stage: "Screening", val: 56, w: "80%", c: "bg-zinc-700"},
-                   {stage: "Due Diligence", val: 12, w: "60%", c: "bg-blue-900/50"},
-                   {stage: "Term Sheet", val: 4, w: "40%", c: "bg-blue-700/50"},
-                   {stage: "Closed", val: 2, w: "25%", c: "bg-blue-500"}
-                 ].map((row, i) => (
-                   <div key={i} className="flex items-center gap-4 text-xs font-medium">
-                     <span className="w-24 text-muted-foreground">{row.stage}</span>
-                     <div className="flex-1 h-6 bg-zinc-900 rounded-sm overflow-hidden">
-                       <div className={`h-full ${row.c} rounded-sm flex items-center px-2`} style={{width: row.w}}>
-                         <span className="text-[10px] text-white mix-blend-difference">{row.val}</span>
-                       </div>
-                     </div>
-                   </div>
-                 ))}
-              </div>
-            </div>
+          <div className="flex justify-between items-center border-t border-zinc-900 pt-3 mt-2 text-[10px] text-zinc-500 font-medium">
+            <span>Conversion Rate</span>
+            <span className="text-emerald-400 font-mono font-bold text-xs">1.92%</span>
           </div>
-
-          {/* Sector Heatmap & Recent Reports */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             {/* Heatmap */}
-             <div className="p-5 bg-card border border-border rounded-xl">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-semibold text-foreground">Sector Heatmap</h3>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  {name: "AI/ML", v: "bg-emerald-500/80"}, {name: "Fintech", v: "bg-emerald-500/40"}, {name: "SaaS", v: "bg-zinc-800"},
-                  {name: "Health", v: "bg-rose-500/40"}, {name: "Crypto", v: "bg-rose-500/80"}, {name: "Deeptech", v: "bg-emerald-500/60"}
-                ].map((sec, i) => (
-                  <div key={i} className={`${sec.v} h-16 rounded-md flex items-center justify-center text-xs font-semibold shadow-inner`}>
-                    {sec.name}
-                  </div>
-                ))}
-              </div>
-             </div>
-
-             {/* Recent Reports */}
-             <div className="p-5 bg-card border border-border rounded-xl flex flex-col">
-              <h3 className="text-sm font-semibold text-foreground mb-4">Recent Memos</h3>
-              <div className="flex flex-col gap-3 flex-1 overflow-y-auto">
-                {["Acme Series A Memo", "FinSync Tech DD", "HealthAI Market Analysis"].map((report, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 hover:bg-zinc-900 rounded-md cursor-pointer transition-colors border border-transparent hover:border-border">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-500/10 rounded-md text-blue-400"><FileText className="h-4 w-4"/></div>
-                      <span className="text-sm text-foreground">{report}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground font-mono">Today</span>
-                  </div>
-                ))}
-              </div>
-             </div>
-          </div>
-
         </div>
 
-        {/* Right Column (AI, Tasks, Calendar, Activity) */}
-        <div className="md:col-span-4 flex flex-col gap-6">
-          
-          {/* AI Diligence Assistant (Glassmorphism) */}
-          <div className="p-1 rounded-xl bg-gradient-to-br from-purple-500/30 to-blue-500/10 h-auto">
-            <div className="bg-card/80 backdrop-blur-md p-5 rounded-lg border border-white/5 h-full flex flex-col relative overflow-hidden">
-              <div className="flex items-center gap-2 mb-4 relative z-10">
-                <Brain className="h-5 w-5 text-purple-400" />
-                <h3 className="text-sm font-semibold font-geist text-purple-50">VentureLens AI</h3>
-              </div>
-              <div className="flex flex-col gap-3 relative z-10">
-                <div className="p-3 bg-black/40 rounded-lg border border-white/5">
-                  <p className="text-xs text-zinc-300">New risk identified in <strong>Acme Corp</strong> data room. The ARR churn increased by 4% in Q3.</p>
-                  <button className="text-[10px] text-purple-400 font-semibold mt-2 hover:underline uppercase tracking-wider">Review Findings →</button>
-                </div>
-              </div>
-            </div>
+        {/* Portfolio Health */}
+        <div className="lg:col-span-4 bg-zinc-950/40 border border-border/40 p-5 rounded-xl flex flex-col">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Portfolio Health</h3>
+            <button className="text-[10px] text-blue-400 font-medium hover:underline">View All</button>
           </div>
 
-          {/* Calendar & Tasks */}
-          <div className="p-5 bg-card border border-border rounded-xl flex-1 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-zinc-500" /> Schedule & Tasks
-              </h3>
+          <div className="flex items-center gap-6 my-auto">
+            {/* Health Score Circular Gauge */}
+            <div className="relative inline-flex items-center justify-center w-28 h-28 shrink-0">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle cx="56" cy="56" r="46" stroke="currentColor" strokeWidth="8" fill="none" className="text-zinc-900" />
+                <circle cx="56" cy="56" r="46" stroke="currentColor" strokeWidth="8" fill="none" className="text-emerald-500" strokeDasharray="289" strokeDashoffset="63" strokeLinecap="round" />
+              </svg>
+              <div className="absolute flex flex-col items-center">
+                <span className="text-3xl font-extrabold font-geist text-white leading-none">78</span>
+                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider mt-1">Good</span>
+              </div>
+            </div>
+
+            <div className="flex-1 space-y-2 text-[11px] font-medium text-zinc-400">
+              {[
+                { label: "Excellent (80-100)", count: 6, color: "bg-emerald-500" },
+                { label: "Good (60-79)", count: 8, color: "bg-blue-500" },
+                { label: "Average (40-59)", count: 3, color: "bg-amber-500" },
+                { label: "At Risk (20-39)", count: 2, color: "bg-orange-500" },
+                { label: "Critical (0-19)", count: 1, color: "bg-rose-500" }
+              ].map((h, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <div className={`size-1.5 rounded-full ${h.color}`} />
+                    <span>{h.label}</span>
+                  </div>
+                  <span className="font-mono text-zinc-300">{h.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* My Tasks Checklist */}
+        <div className="lg:col-span-4 bg-zinc-950/40 border border-border/40 p-5 rounded-xl flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">My Tasks</h3>
+            <button className="text-[10px] text-blue-400 font-medium hover:underline">View All</button>
+          </div>
+
+          <div className="space-y-3 my-auto">
+            {[
+              { task: "Review FinModel - SynthAI", priority: "High", due: "Due today", checked: false, color: "text-rose-500 border-rose-500/20 bg-rose-500/10" },
+              { task: "Technical DD - Nexora Labs", priority: "High", due: "Due in 1 day", checked: false, color: "text-rose-500 border-rose-500/20 bg-rose-500/10" },
+              { task: "Market Analysis - Vectora", priority: "Medium", due: "Due in 2 days", checked: false, color: "text-amber-500 border-amber-500/20 bg-amber-500/10" },
+              { task: "IC Memo - QuantumDB", priority: "High", due: "Due in 3 days", checked: false, color: "text-rose-500 border-rose-500/20 bg-rose-500/10" },
+              { task: "Follow up - Greenlyst", priority: "Low", due: "Due in 5 days", checked: false, color: "text-zinc-400 border-zinc-800 bg-zinc-900" }
+            ].map((t, i) => (
+              <div key={i} className="flex items-center gap-3 text-xs bg-zinc-900/20 border border-border/20 p-2.5 rounded-lg">
+                <input type="checkbox" readOnly checked={t.checked} className="rounded border-zinc-700 bg-zinc-900 text-blue-500 focus:ring-0 focus:ring-offset-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-zinc-200 truncate">{t.task}</p>
+                  <p className="text-[10px] text-zinc-500 mt-0.5">{t.due}</p>
+                </div>
+                <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${t.color}`}>{t.priority}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Third Dashboard Layout Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        {/* Recent Due Diligence Reports */}
+        <div className="lg:col-span-4 bg-zinc-950/40 border border-border/40 p-5 rounded-xl flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Recent Diligence Reports</h3>
+            <button className="text-[10px] text-blue-400 font-medium hover:underline font-geist">View All</button>
+          </div>
+
+          <div className="space-y-2.5 my-auto">
+            {[
+              { company: "SynthAI", stage: "Series A", score: 84, color: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10", time: "2h ago" },
+              { company: "Nexora Labs", stage: "Seed", score: 72, color: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10", time: "5h ago" },
+              { company: "QuantumDB", stage: "Series Seed", score: 88, color: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10", time: "1d ago" },
+              { company: "Vectora", stage: "Seed", score: 68, color: "text-blue-400 border-blue-400/20 bg-blue-500/10", time: "2d ago" },
+              { company: "Greenlyst", stage: "Pre-Seed", score: 64, color: "text-blue-400 border-blue-400/20 bg-blue-500/10", time: "2d ago" }
+            ].map((r, i) => (
+              <div key={i} className="flex items-center justify-between text-xs border-b border-zinc-900 pb-2 last:border-0 last:pb-0">
+                <div className="flex items-center gap-2">
+                  <div className="size-6 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-bold text-white">{r.company.charAt(0)}</div>
+                  <div>
+                    <span className="font-semibold text-zinc-200">{r.company}</span>
+                    <span className="text-[10px] text-zinc-500 ml-2 font-normal">{r.stage}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${r.color}`}>{r.score}</span>
+                  <span className="text-[10px] text-zinc-500 w-12 text-right">{r.time}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Risk Distribution and Top Risk Factors */}
+        <div className="lg:col-span-4 bg-zinc-950/40 border border-border/40 p-5 rounded-xl flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Risk Analysis</h3>
+              <button className="text-[10px] text-blue-400 font-medium hover:underline">View All</button>
             </div>
             
-            <div className="space-y-4 flex-1">
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center min-w-10">
-                  <span className="text-xs font-bold text-foreground">10:00</span>
-                  <span className="text-[10px] text-muted-foreground">AM</span>
-                </div>
-                <div className="flex-1 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm border-l-2 border-l-blue-500">
-                  <p className="font-semibold text-blue-50">Partner Meeting</p>
-                  <p className="text-xs text-blue-400 mt-1">Review Acme Term Sheet</p>
+            <div className="flex gap-4 items-center mb-6">
+              <div className="relative inline-flex items-center justify-center w-20 h-20 shrink-0">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle cx="40" cy="40" r="32" stroke="currentColor" strokeWidth="6" fill="none" className="text-zinc-900" />
+                  <circle cx="40" cy="40" r="32" stroke="currentColor" strokeWidth="6" fill="none" className="text-rose-500" strokeDasharray="201" strokeDashoffset="150" strokeLinecap="round" />
+                </svg>
+                <div className="absolute flex flex-col items-center">
+                  <span className="text-lg font-bold text-white leading-none">24</span>
+                  <span className="text-[8px] text-zinc-500 mt-0.5">Companies</span>
                 </div>
               </div>
               
-              <div className="flex gap-3">
-                <div className="flex flex-col items-center min-w-10">
-                  <span className="text-xs font-bold text-foreground">1:30</span>
-                  <span className="text-[10px] text-muted-foreground">PM</span>
-                </div>
-                <div className="flex-1 p-3 bg-zinc-900 border border-border rounded-lg text-sm border-l-2 border-l-zinc-700">
-                  <p className="font-semibold">Founder Call</p>
-                  <p className="text-xs text-muted-foreground mt-1">FinSync initial screen</p>
-                </div>
+              <div className="flex-1 grid grid-cols-2 gap-1.5 text-[10px] font-medium text-zinc-400">
+                <div className="flex items-center justify-between"><span className="flex items-center gap-1"><div className="size-1.5 rounded-full bg-emerald-500"/>Low Risk</span><span className="font-mono">6</span></div>
+                <div className="flex items-center justify-between"><span className="flex items-center gap-1"><div className="size-1.5 rounded-full bg-amber-500"/>Med Risk</span><span className="font-mono">9</span></div>
+                <div className="flex items-center justify-between"><span className="flex items-center gap-1"><div className="size-1.5 rounded-full bg-rose-500"/>High Risk</span><span className="font-mono">6</span></div>
+                <div className="flex items-center justify-between"><span className="flex items-center gap-1"><div className="size-1.5 rounded-full bg-red-600"/>Critical</span><span className="font-mono">3</span></div>
               </div>
             </div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="p-5 bg-card border border-border rounded-xl h-64 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Activity className="h-4 w-4 text-zinc-500" /> Activity Log
-              </h3>
-            </div>
-            <div className="flex flex-col gap-4 overflow-y-auto">
-              <div className="flex gap-3 items-start relative before:absolute before:left-3 before:top-6 before:bottom-[-16px] before:w-[1px] before:bg-border">
-                <div className="h-6 w-6 rounded-full bg-zinc-800 border-2 border-card flex items-center justify-center shrink-0 z-10 text-[9px] font-bold text-zinc-400">JD</div>
-                <div>
-                  <p className="text-xs text-foreground"><span className="font-medium text-blue-400">Jane</span> moved Acme to <strong>Term Sheet</strong></p>
-                  <p className="text-[10px] text-muted-foreground mt-1">10 mins ago</p>
+          <div className="border-t border-zinc-900 pt-4 space-y-2">
+            <h4 className="text-[10px] font-bold text-zinc-500 tracking-wider uppercase mb-2">Top Risk Factors</h4>
+            {[
+              { name: "High Burn Rate", pct: 42, color: "bg-rose-500" },
+              { name: "Customer Concentration", pct: 29, color: "bg-rose-500" },
+              { name: "Weak Unit Economics", pct: 25, color: "bg-amber-500" },
+              { name: "Founder Dependency", pct: 21, color: "bg-amber-500" },
+              { name: "Market Competition", pct: 18, color: "bg-emerald-500" }
+            ].map((risk, i) => (
+              <div key={i} className="space-y-1">
+                <div className="flex justify-between text-[10px] font-semibold text-zinc-300">
+                  <span>{risk.name}</span>
+                  <span className="font-mono">{risk.pct}%</span>
+                </div>
+                <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden">
+                  <div className={`h-full ${risk.color}`} style={{ width: `${risk.pct}%` }} />
                 </div>
               </div>
-              <div className="flex gap-3 items-start relative before:absolute before:left-3 before:top-6 before:bottom-[-16px] before:w-[1px] before:bg-border">
-                <div className="h-6 w-6 rounded-full bg-zinc-800 border-2 border-card flex items-center justify-center shrink-0 z-10 text-[9px] font-bold text-zinc-400">AI</div>
-                <div>
-                  <p className="text-xs text-foreground"><span className="font-medium text-purple-400">Agent</span> completed tech diligence</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">1 hour ago</p>
-                </div>
-              </div>
-              <div className="flex gap-3 items-start relative">
-                <div className="h-6 w-6 rounded-full bg-zinc-800 border-2 border-card flex items-center justify-center shrink-0 z-10 text-[9px] font-bold text-zinc-400">MK</div>
-                <div>
-                  <p className="text-xs text-foreground"><span className="font-medium text-emerald-400">Mike</span> uploaded Q3 Financials</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">3 hours ago</p>
-                </div>
-              </div>
-            </div>
+            ))}
+          </div>
+        </div>
+
+        {/* AI Alerts widget */}
+        <div className="lg:col-span-4 bg-zinc-950/40 border border-border/40 p-5 rounded-xl flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">AI Alerts</h3>
+            <button className="text-[10px] text-blue-400 font-medium hover:underline">View All</button>
           </div>
 
+          <div className="space-y-2.5 my-auto">
+            {[
+              { title: "High Customer Concentration", target: "EcoMove", risk: "High", time: "2h ago", color: "text-rose-400 bg-rose-500/10 border-rose-500/20" },
+              { title: "Runway < 12 Months", target: "SynthAI", risk: "High", time: "5h ago", color: "text-rose-400 bg-rose-500/10 border-rose-500/20" },
+              { title: "Negative Gross Margin", target: "UrbanStash", risk: "Medium", time: "1d ago", color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
+              { title: "Rapid Burn Increase", target: "HealthSync", risk: "Medium", time: "1d ago", color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
+              { title: "Unusual Revenue Spike", target: "PayFlow", risk: "Low", time: "2d ago", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" }
+            ].map((a, i) => (
+              <div key={i} className="flex gap-2 text-xs border-b border-zinc-900 pb-2 last:border-0 last:pb-0">
+                <ShieldAlert className="h-4 w-4 text-zinc-500 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start gap-2">
+                    <p className="font-semibold text-zinc-200 truncate">{a.title}</p>
+                    <span className="text-[8px] text-zinc-500 shrink-0">{a.time}</span>
+                  </div>
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-[10px] text-zinc-400 font-medium">{a.target}</span>
+                    <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded border ${a.color}`}>Risk: {a.risk}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Bottom Table: Portfolio Companies */}
+      <div className="bg-zinc-950/40 border border-border/40 p-5 rounded-xl">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Portfolio Companies</h3>
+          <div className="flex items-center gap-2">
+            <button className="text-[10px] text-blue-400 font-medium hover:underline mr-4">View All</button>
+            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:opacity-90">
+              <Zap className="h-3 w-3" /> Add Company
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="text-zinc-500 border-b border-zinc-900 pb-3 font-semibold">
+                <th className="pb-3 pr-4">Company</th>
+                <th className="pb-3 pr-4">Stage</th>
+                <th className="pb-3 pr-4">Ownership</th>
+                <th className="pb-3 pr-4">Health Score</th>
+                <th className="pb-3 pr-4">ARR</th>
+                <th className="pb-3 pr-4">Runway</th>
+                <th className="pb-3 pr-4">Trend</th>
+                <th className="pb-3">Last Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { name: "SynthAI", stage: "Series A", ownership: "12.5%", score: 84, scoreColor: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10", arr: "$12.4M", runway: "14 months", trend: "up", updated: "2h ago" },
+                { name: "QuantumDB", stage: "Seed", ownership: "8.7%", score: 88, scoreColor: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10", arr: "$3.2M", runway: "18 months", trend: "up", updated: "1d ago" },
+                { name: "EcoMove", stage: "Series A", ownership: "15.2%", score: 62, scoreColor: "text-blue-400 border-blue-400/20 bg-blue-500/10", arr: "$8.7M", runway: "10 months", trend: "up", updated: "1d ago" },
+                { name: "HealthSync", stage: "Seed", ownership: "9.3%", score: 75, scoreColor: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10", arr: "$2.1M", runway: "16 months", trend: "down", updated: "2d ago" },
+                { name: "UrbanStash", stage: "Seed", ownership: "7.1%", score: 58, scoreColor: "text-amber-400 border-amber-400/20 bg-amber-500/10", arr: "$1.4M", runway: "8 months", trend: "up", updated: "2d ago" }
+              ].map((c, i) => (
+                <tr key={i} className="border-b border-zinc-900/60 hover:bg-zinc-900/20 last:border-0">
+                  <td className="py-3.5 pr-4 flex items-center gap-2">
+                    <div className="size-6 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-bold text-white">{c.name.charAt(0)}</div>
+                    <span className="font-semibold text-white">{c.name}</span>
+                  </td>
+                  <td className="py-3.5 pr-4 text-zinc-400 font-medium">{c.stage}</td>
+                  <td className="py-3.5 pr-4 text-zinc-400 font-mono font-medium">{c.ownership}</td>
+                  <td className="py-3.5 pr-4">
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${c.scoreColor}`}>{c.score}</span>
+                  </td>
+                  <td className="py-3.5 pr-4 text-zinc-200 font-mono font-medium">{c.arr}</td>
+                  <td className="py-3.5 pr-4 text-zinc-400 font-medium">{c.runway}</td>
+                  <td className="py-3.5 pr-4">
+                    {c.trend === "up" ? (
+                      <TrendingUp className="h-4.5 w-4.5 text-emerald-500" />
+                    ) : (
+                      <TrendingDown className="h-4.5 w-4.5 text-rose-500" />
+                    )}
+                  </td>
+                  <td className="py-3.5 text-zinc-500 font-medium">{c.updated}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
+
     </div>
   );
 }

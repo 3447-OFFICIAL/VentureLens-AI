@@ -1,216 +1,106 @@
 "use client";
 
+import React, { useState } from "react";
 import { 
-  FileText, Download, FileJson, FileType, 
-  Presentation, LayoutGrid, FileSpreadsheet,
-  Brain, CheckCircle2, Loader2, PlayCircle,
-  FileBarChart, ShieldAlert, Users, FolderOpen
+  FileJson, Search, Filter, Sparkles, Plus, Clock, User, 
+  FileText, ShieldAlert, BadgeAlert, CheckCircle2, ChevronRight, BarChart3
 } from "lucide-react";
-import { useState } from "react";
+import Link from "next/link";
 
-export default function ReportsModule() {
-  const [generating, setGenerating] = useState(false);
-  const [activeType, setActiveType] = useState("memo");
-  const [activeFormat, setActiveFormat] = useState("pdf");
-
-  const reportTypes = [
-    { id: "memo", label: "Investment Memo", icon: FileText, desc: "Comprehensive IC deal memo." },
-    { id: "board", label: "Board Report", icon: Users, desc: "Quarterly updates for board of directors." },
-    { id: "lp", label: "LP Report", icon: FolderOpen, desc: "Fund performance and portfolio breakdown." },
-    { id: "risk", label: "Risk Report", icon: ShieldAlert, desc: "Tech, compliance, and financial risks." },
-    { id: "financial", label: "Financial Report", icon: FileBarChart, desc: "Cash flow, ARR, and valuations." }
+export default function AIReportsModule() {
+  const [activeTab, setActiveTab] = useState("all");
+  
+  const reports = [
+    { company: "SynthAI", type: "Investment Memo", time: "2h ago", score: 84, scoreLabel: "Thesis Fit", status: "Completed", color: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10" },
+    { company: "QuantumDB", type: "Financial Analysis", time: "1d ago", score: 88, scoreLabel: "Under Valued", status: "Completed", color: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10" },
+    { company: "Vectora", type: "Technical DD Report", time: "2d ago", score: 68, scoreLabel: "High Debt", status: "Completed", color: "text-blue-400 border-blue-400/20 bg-blue-500/10" },
+    { company: "Nemora Labs", type: "Market Analysis", time: "2d ago", score: 72, scoreLabel: "Large TAM", status: "Completed", color: "text-blue-400 border-blue-400/20 bg-blue-500/10" },
+    { company: "EcoMove", type: "Risk Assessment", time: "3d ago", score: 62, scoreLabel: "Key Risks", status: "Completed", color: "text-amber-400 border-amber-400/20 bg-amber-500/10" },
+    { company: "HealthSync", type: "Competitive Analysis", time: "3d ago", score: 75, scoreLabel: "Moated", status: "Completed", color: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10" },
+    { company: "Greenlyst", type: "Founder Assessment", time: "3d ago", score: 64, scoreLabel: "High Velocity", status: "Completed", color: "text-blue-400 border-blue-400/20 bg-blue-500/10" },
+    { company: "PayFlow", type: "Financial Projections", time: "3d ago", score: 56, scoreLabel: "Burn Risk", status: "Completed", color: "text-amber-400 border-amber-400/20 bg-amber-500/10" }
   ];
-
-  const formats = [
-    { id: "pdf", label: "PDF Document", icon: FileType },
-    { id: "docx", label: "Word (DOCX)", icon: FileText },
-    { id: "xlsx", label: "Excel (XLSX)", icon: FileSpreadsheet },
-    { id: "ppt", label: "Presentation", icon: Presentation }
-  ];
-
-  const handleGenerate = (e: React.FormEvent) => {
-    e.preventDefault();
-    setGenerating(true);
-    setTimeout(() => setGenerating(false), 2000);
-  };
 
   return (
-    <div className="flex flex-col h-full w-full space-y-6">
+    <div className="flex flex-col h-full w-full space-y-6 text-zinc-300 font-sans">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-geist font-bold flex items-center gap-2">
-              <FileJson className="h-6 w-6"/> Reports & Generation
-            </h1>
-          </div>
-          <p className="text-sm text-muted-foreground">Automated AI reporting and document generation.</p>
+          <h1 className="text-2xl font-bold font-geist tracking-tight text-white flex items-center gap-2">
+            <FileJson className="h-6 w-6 text-blue-500" /> AI Reports
+          </h1>
+          <p className="text-zinc-500 text-xs mt-1">AI-generated reports and analyses.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
-        
-        {/* Left Col: Generator Config */}
-        <div className="lg:col-span-8 space-y-6 flex flex-col">
-          
-          <div className="bg-card border border-border p-6 rounded-xl flex-1 flex flex-col">
-            <h3 className="font-semibold mb-6 flex items-center gap-2"><LayoutGrid className="h-4 w-4" /> Configure Report</h3>
-            
-            <div className="space-y-6 flex-1">
-              
-              {/* Report Type Selection */}
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">1. Select Report Type</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {reportTypes.map(type => (
-                    <div 
-                      key={type.id}
-                      onClick={() => setActiveType(type.id)}
-                      className={`flex flex-col gap-1 p-3 rounded-lg border cursor-pointer transition-colors ${
-                        activeType === type.id 
-                          ? 'bg-blue-500/10 border-blue-500/50' 
-                          : 'bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <type.icon className={`h-4 w-4 ${activeType === type.id ? 'text-blue-400' : 'text-muted-foreground'}`} />
-                          <span className={`text-sm font-medium ${activeType === type.id ? 'text-blue-100' : 'text-zinc-300'}`}>{type.label}</span>
-                        </div>
-                        {activeType === type.id && <CheckCircle2 className="h-4 w-4 text-blue-500" />}
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-1">{type.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Data Source Configuration */}
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">2. Target Data</h4>
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="text-xs text-muted-foreground mb-1 block">Company / Fund</label>
-                    <select className="w-full bg-zinc-900 border border-zinc-800 rounded-md text-sm px-3 py-2 focus:outline-none focus:border-blue-500 text-zinc-300">
-                      <option>Acme Corp</option>
-                      <option>FinSync</option>
-                      <option>Fund I (Global)</option>
-                    </select>
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-xs text-muted-foreground mb-1 block">Time Period</label>
-                    <select className="w-full bg-zinc-900 border border-zinc-800 rounded-md text-sm px-3 py-2 focus:outline-none focus:border-blue-500 text-zinc-300">
-                      <option>Q3 2025</option>
-                      <option>YTD 2025</option>
-                      <option>Trailing 12 Months</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Export Format */}
-              <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">3. Export Format</h4>
-                <div className="flex flex-wrap gap-3">
-                  {formats.map(fmt => (
-                    <button
-                      key={fmt.id}
-                      onClick={() => setActiveFormat(fmt.id)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                        activeFormat === fmt.id
-                          ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400'
-                          : 'bg-zinc-900/50 border-zinc-800 text-muted-foreground hover:bg-zinc-800 hover:text-zinc-300'
-                      }`}
-                    >
-                      <fmt.icon className="h-4 w-4" />
-                      {fmt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-
-            <div className="pt-6 border-t border-border mt-6 flex justify-end">
-               <button 
-                 onClick={handleGenerate}
-                 disabled={generating}
-                 className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-               >
-                 {generating ? (
-                   <><Loader2 className="h-4 w-4 animate-spin" /> Generating AI Report...</>
-                 ) : (
-                   <><PlayCircle className="h-4 w-4" /> Generate Report</>
-                 )}
-               </button>
-            </div>
-          </div>
-
+      {/* Tabs & Filters */}
+      <div className="flex flex-col xl:flex-row justify-between gap-4 border-b border-zinc-900 pb-2">
+        <div className="flex gap-4 overflow-x-auto">
+          {[
+            { id: "all", label: "All Reports" },
+            { id: "financial", label: "Financial" },
+            { id: "technical", label: "Technical" },
+            { id: "market", label: "Market" },
+            { id: "legal", label: "Legal" },
+            { id: "risk", label: "Risk" },
+            { id: "custom", label: "Custom" }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`pb-3 text-xs font-bold border-b-2 transition-all shrink-0 ${
+                activeTab === tab.id 
+                  ? "border-blue-500 text-blue-400 font-bold" 
+                  : "border-transparent text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Right Col: Recent Reports & AI Log */}
-        <div className="lg:col-span-4 space-y-6 flex flex-col">
-          
-          {/* AI Generation Log */}
-          <div className="bg-gradient-to-b from-purple-900/20 to-transparent border border-purple-500/20 rounded-xl p-5 relative overflow-hidden h-[200px]">
-            <div className="flex items-center gap-2 mb-4 relative z-10">
-              <Brain className="h-5 w-5 text-purple-400" />
-              <h3 className="font-semibold text-purple-50">AI Compiler Status</h3>
-            </div>
-            
-            <div className="space-y-3 relative z-10 text-sm font-mono mt-4">
-              {generating ? (
-                <>
-                  <p className="text-xs text-purple-400 animate-pulse">Initializing LLM compiler...</p>
-                  <p className="text-xs text-zinc-400">Fetching Acme Corp financials...</p>
-                  <p className="text-xs text-zinc-400">Synthesizing IC notes...</p>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center text-center h-full text-zinc-500 py-6">
-                  <p className="text-xs">System idle.</p>
-                  <p className="text-[10px]">Select configuration to begin generation.</p>
-                </div>
-              )}
-            </div>
-            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><Brain className="h-32 w-32" /></div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <input 
+              type="text" 
+              placeholder="Search reports..." 
+              className="bg-zinc-900 border border-zinc-800 rounded-lg text-xs pl-9 pr-4 py-1.5 focus:outline-none focus:border-blue-500 text-white" 
+            />
           </div>
-
-          {/* Recent Reports */}
-          <div className="bg-card border border-border p-5 rounded-xl flex-1 flex flex-col">
-             <h3 className="font-semibold mb-4 flex items-center gap-2">Recent Exports</h3>
-             
-             <div className="space-y-3 overflow-y-auto pr-2">
-               {[
-                 { title: "Acme Corp Memo", type: "Investment Memo", format: "PDF", date: "Oct 24", icon: FileType, color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20" },
-                 { title: "Q3 Board Deck", type: "Board Report", format: "PPT", date: "Oct 20", icon: Presentation, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
-                 { title: "Fund I LP Update", type: "LP Report", format: "PDF", date: "Oct 01", icon: FileType, color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20" },
-                 { title: "FinSync Model", type: "Financial Report", format: "XLSX", date: "Sep 15", icon: FileSpreadsheet, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
-               ].map((doc, i) => (
-                 <div key={i} className="flex items-center justify-between p-3 bg-zinc-900/50 border border-zinc-800 rounded-lg group hover:border-zinc-700 transition-colors cursor-pointer">
-                   <div className="flex items-center gap-3">
-                     <div className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 border ${doc.bg}`}>
-                       <doc.icon className={`h-4 w-4 ${doc.color}`} />
-                     </div>
-                     <div>
-                       <p className="text-sm font-medium text-zinc-200 group-hover:text-blue-400 transition-colors">{doc.title}</p>
-                       <div className="flex items-center gap-2 mt-0.5">
-                         <span className="text-[10px] text-muted-foreground">{doc.type}</span>
-                         <span className="text-[10px] text-zinc-500">•</span>
-                         <span className="text-[10px] text-muted-foreground">{doc.date}</span>
-                       </div>
-                     </div>
-                   </div>
-                   <button className="text-zinc-500 hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                     <Download className="h-4 w-4" />
-                   </button>
-                 </div>
-               ))}
-             </div>
-          </div>
-
+          <button className="flex items-center gap-2 px-3 py-1.5 border border-zinc-800 bg-zinc-900 text-zinc-300 rounded-lg text-xs font-semibold hover:bg-zinc-800">
+            <Filter className="h-3.5 w-3.5" /> Filters
+          </button>
         </div>
       </div>
+
+      {/* Reports Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {reports.map((r, i) => (
+          <div 
+            key={i} 
+            className="p-5 bg-zinc-950/40 border border-border/40 hover:border-zinc-800 transition-colors rounded-xl flex flex-col justify-between group relative overflow-hidden"
+          >
+            <div>
+              <div className="flex justify-between items-start gap-2 mb-3">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{r.type}</span>
+                <span className="text-[9px] text-zinc-500">{r.time}</span>
+              </div>
+              <h4 className="text-base font-bold text-white mb-1 tracking-tight">{r.company}</h4>
+              <p className="text-zinc-500 text-[10px] leading-relaxed">Generated by VentureLens AI. Vetted against investment thesis parameters.</p>
+            </div>
+            
+            <div className="flex items-center justify-between border-t border-zinc-900/60 pt-4 mt-6">
+              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${r.color}`}>
+                {r.score}
+              </span>
+              <span className="text-[10px] text-zinc-400 font-semibold">{r.scoreLabel}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 }
