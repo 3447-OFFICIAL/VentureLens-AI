@@ -1,62 +1,132 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form
+import os
+import uuid
+import aiofiles
+from typing import Optional
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse
-import asyncio
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
 from ..core.database import get_db
 from ..api.deps import get_current_user
 from ..models.user import User
+from ..models.crm import Document
+from ..agents.workflow import AIAgentCoordinator
+from ..core.qdrant import search_documents
 from ..worker import process_document
-import uuid
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 class ChatQuery(BaseModel):
-    company_id: str
+    company_id: Optional[str] = None
     query: str
 
+class GenerateMemoQuery(BaseModel):
+    company_id: str
+    payload: str = "Generate comprehensive Series A investment memo"
 
-
-async def fake_token_generator():
-    tokens = ["Based", " on", " the", " Q3", " financials,", " the", " burn", " rate", " is", " $450k/month."]
-    for token in tokens:
-        yield f"data: {token}\n\n"
-        await asyncio.sleep(0.05)
-    yield "event: end\ndata: [DONE]\n\n"
+class SearchQuery(BaseModel):
+    query: str
+    company_id: Optional[str] = None
+    limit: int = 5
 
 @router.post("/chat")
 async def ask_ai(
     query: ChatQuery, 
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
     RAG endpoint to query the specialist AI agents via Server-Sent Events (SSE).
+    Streams reasoning tokens directly from the agent coordinator.
     """
-    return StreamingResponse(fake_token_generator(), media_type="text/event-stream")
+    coordinator = AIAgentCoordinator(tenant_id=str(current_user.tenant_id))
+    return StreamingResponse(
+        coordinator.stream_copilot_chat(query.query, query.company_id),
+        media_type="text/event-stream"
+    )
 
-@router.post("/upload")
-def upload_document(
-    file: UploadFile = File(...), 
-    company_id: str = Form(...), 
-    db: Session = Depends(get_db),
+@router.post("/generate-memo")
+async def stream_generate_memo(
+    query: GenerateMemoQuery,
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Upload a document for OCR and embedding to Qdrant.
-    Triggers Celery background task.
+    Orchestrates the complete 10-agent pipeline (Specialists -> Critic QA -> IC Committee -> Memo)
+    and streams progressive status events + final markdown tokens via SSE.
     """
-    # 1. Save file locally or to S3 (Mocked)
-    file_path = f"/tmp/{uuid.uuid4()}_{file.filename}"
+    coordinator = AIAgentCoordinator(tenant_id=str(current_user.tenant_id))
+    return StreamingResponse(
+        coordinator.stream_memo_pipeline(query.company_id, query.payload),
+        media_type="text/event-stream"
+    )
+
+@router.post("/search")
+async def search_knowledge_base(
+    query: SearchQuery,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Searches the tenant's vector database in Qdrant for semantic citations.
+    """
+    results = await search_documents(
+        tenant_id=str(current_user.tenant_id),
+        query=query.query,
+        company_id=query.company_id,
+        limit=query.limit
+    )
+    return {"results": results, "count": len(results)}
+
+@router.post("/upload")
+async def upload_document(
+    file: UploadFile = File(...), 
+    company_id: str = Form(...), 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Uploads a data room document, saves it to local/cloud storage,
+    persists a Document record to PostgreSQL, and triggers the async embedding worker.
+    """
+    doc_id = uuid.uuid4()
+    safe_filename = f"{doc_id}_{file.filename}"
+    file_path = os.path.join(UPLOAD_DIR, safe_filename)
     
-    # 2. Trigger async worker
-    doc_id = str(uuid.uuid4())
-    task = process_document.delay(doc_id, current_user.tenant_id, file_path)
+    # Save file to disk
+    async with aiofiles.open(file_path, "wb") as out_file:
+        content = await file.read()
+        await out_file.write(content)
+        
+    # Save document record to DB
+    doc_record = Document(
+        id=doc_id,
+        tenant_id=current_user.tenant_id,
+        company_id=uuid.UUID(company_id) if len(company_id) == 36 else doc_id,
+        title=file.filename or "Untitled Document",
+        s3_url=file_path,
+        doc_type="DataRoom",
+        status="Processing"
+    )
+    db.add(doc_record)
+    await db.commit()
+    
+    # Trigger background worker for text chunking & vector indexing
+    task = process_document.delay(
+        str(doc_id), 
+        str(current_user.tenant_id), 
+        company_id, 
+        file_path, 
+        file.filename or "Document"
+    )
     
     return {
         "status": "processing", 
         "filename": file.filename, 
-        "task_id": task.id,
-        "doc_id": doc_id
+        "task_id": task.id if task else None,
+        "doc_id": str(doc_id)
     }

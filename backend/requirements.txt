@@ -14,3 +14,7 @@ aiosqlite
 email-validator
 python-multipart
 slowapi
+aiofiles
+pytest
+pytest-asyncio
+httpx
