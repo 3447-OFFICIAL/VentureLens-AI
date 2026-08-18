@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { 
-  Settings, User, Building2, Key, Shield, Bell, Save, CheckCircle2, 
-  Loader2, Globe, Database
+  Settings, User, Building2, Key, Shield, Save, Loader2 
 } from "lucide-react";
 import { api } from "@/lib/api";
 

@@ -18,8 +18,7 @@ import {
   Settings,
   Users,
   Database,
-  Link2,
-  Bot
+  Link2
 } from 'lucide-react';
 
 export default function Sidebar() {

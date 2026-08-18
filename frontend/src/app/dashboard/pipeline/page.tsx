@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { 
-  Search, Plus, Filter, MoreHorizontal, MessageSquare, CheckCircle2, 
-  AlertCircle, Zap, Activity, Loader2, X, PlusCircle
+  Search, Plus, Filter, MoreHorizontal, 
+  Zap, Activity, Loader2, X, PlusCircle
 } from "lucide-react";
 import { api } from "@/lib/api";
 

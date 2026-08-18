@@ -1,24 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-  FileJson, Search, Filter, Sparkles, Plus, Clock, User, 
-  FileText, ShieldAlert, BadgeAlert, CheckCircle2, ChevronRight, BarChart3
-} from "lucide-react";
-import Link from "next/link";
+import { FileJson, Search, Filter } from "lucide-react";
 
 export default function AIReportsModule() {
   const [activeTab, setActiveTab] = useState("all");
   
   const reports = [
-    { company: "SynthAI", type: "Investment Memo", time: "2h ago", score: 84, scoreLabel: "Thesis Fit", status: "Completed", color: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10" },
-    { company: "QuantumDB", type: "Financial Analysis", time: "1d ago", score: 88, scoreLabel: "Under Valued", status: "Completed", color: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10" },
-    { company: "Vectora", type: "Technical DD Report", time: "2d ago", score: 68, scoreLabel: "High Debt", status: "Completed", color: "text-blue-400 border-blue-400/20 bg-blue-500/10" },
-    { company: "Nemora Labs", type: "Market Analysis", time: "2d ago", score: 72, scoreLabel: "Large TAM", status: "Completed", color: "text-blue-400 border-blue-400/20 bg-blue-500/10" },
-    { company: "EcoMove", type: "Risk Assessment", time: "3d ago", score: 62, scoreLabel: "Key Risks", status: "Completed", color: "text-amber-400 border-amber-400/20 bg-amber-500/10" },
-    { company: "HealthSync", type: "Competitive Analysis", time: "3d ago", score: 75, scoreLabel: "Moated", status: "Completed", color: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10" },
-    { company: "Greenlyst", type: "Founder Assessment", time: "3d ago", score: 64, scoreLabel: "High Velocity", status: "Completed", color: "text-blue-400 border-blue-400/20 bg-blue-500/10" },
-    { company: "PayFlow", type: "Financial Projections", time: "3d ago", score: 56, scoreLabel: "Burn Risk", status: "Completed", color: "text-amber-400 border-amber-400/20 bg-amber-500/10" }
+    { company: "SynthAI", type: "Investment Memo", time: "2h ago", score: 84, scoreLabel: "Thesis Fit", color: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10" },
+    { company: "QuantumDB", type: "Financial Analysis", time: "1d ago", score: 88, scoreLabel: "Under Valued", color: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10" },
+    { company: "Vectora", type: "Technical DD Report", time: "2d ago", score: 68, scoreLabel: "High Debt", color: "text-blue-400 border-blue-400/20 bg-blue-500/10" },
+    { company: "Nemora Labs", type: "Market Analysis", time: "2d ago", score: 72, scoreLabel: "Large TAM", color: "text-blue-400 border-blue-400/20 bg-blue-500/10" },
+    { company: "EcoMove", type: "Risk Assessment", time: "3d ago", score: 62, scoreLabel: "Key Risks", color: "text-amber-400 border-amber-400/20 bg-amber-500/10" },
+    { company: "HealthSync", type: "Competitive Analysis", time: "3d ago", score: 75, scoreLabel: "Moated", color: "text-emerald-400 border-emerald-400/20 bg-emerald-500/10" },
+    { company: "Greenlyst", type: "Founder Assessment", time: "3d ago", score: 64, scoreLabel: "High Velocity", color: "text-blue-400 border-blue-400/20 bg-blue-500/10" },
+    { company: "PayFlow", type: "Financial Projections", time: "3d ago", score: 56, scoreLabel: "Burn Risk", color: "text-amber-400 border-amber-400/20 bg-amber-500/10" }
   ];
 
   return (

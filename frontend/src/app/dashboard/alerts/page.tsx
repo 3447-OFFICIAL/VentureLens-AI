@@ -1,10 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-  Bell, Search, Filter, ShieldAlert, Sparkles, Check, 
-  Trash2, AlertTriangle, AlertCircle, RefreshCw
-} from "lucide-react";
+import { Bell, ShieldAlert, Check, Trash2 } from "lucide-react";
 
 export default function AlertsModule() {
   const [alerts, setAlerts] = useState([

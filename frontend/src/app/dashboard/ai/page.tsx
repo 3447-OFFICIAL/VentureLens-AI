@@ -2,7 +2,7 @@
 
 import { 
   Brain, Send, FileText, CheckCircle2, Loader2, Plus, 
-  BookOpen, Link2, Link, Hash, Building2, Sparkles, AlertCircle 
+  BookOpen, Sparkles 
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { fetchWithAuth } from "@/lib/api";
@@ -54,6 +54,10 @@ export default function PerplexityAIModule() {
     setSearching(true);
     setShowResults(true);
     setAnswer("");
+    setCitations([
+      { filename: `${userQuery.slice(0, 15).replace(/\s+/g, '_')}_data_room.pdf` },
+      { filename: "Portfolio_Telemetry.json" }
+    ]);
     setSteps([{ id: "init", message: "Connecting to multi-agent specialist network...", done: false }]);
 
     try {

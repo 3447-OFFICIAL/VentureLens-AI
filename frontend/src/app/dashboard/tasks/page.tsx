@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { 
-  CheckSquare, Search, Plus, Filter, Calendar, Users, 
-  Play, Clock, Trash2, Loader2, Sparkles, AlertCircle
+  CheckSquare, Plus, Trash2, Loader2
 } from "lucide-react";
 
 import { api } from "@/lib/api";
@@ -23,8 +22,6 @@ export default function TasksModule() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
-  // New Task Modal
-  const [modalOpen, setModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newPriority, setNewPriority] = useState("Medium");
   const [newCompany, setNewCompany] = useState("");
