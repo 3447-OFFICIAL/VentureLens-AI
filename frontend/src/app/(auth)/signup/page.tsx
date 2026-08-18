@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
@@ -17,25 +18,20 @@ export default function SignupPage() {
     setError("");
     
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          email, 
-          password, 
-          tenant_name: tenantName 
-        })
+      const data = await api.post<{ access_token: string }>("/auth/signup", { 
+        email, 
+        password, 
+        tenant_name: tenantName 
       });
       
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || "Failed to create account");
+      if (data?.access_token) {
+        localStorage.setItem("access_token", data.access_token);
+        window.location.href = "/dashboard";
+      } else {
+        throw new Error("Failed to create account");
       }
-      
-      localStorage.setItem("access_token", data.access_token);
-      window.location.href = "/dashboard";
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Failed to create account");
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import {
   Settings, User, Building2, Key, Shield, Bell, Save, CheckCircle2, 
   Loader2, Globe, Database
 } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function SettingsModule() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -14,13 +15,8 @@ export default function SettingsModule() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const token = localStorage.getItem("access_token");
-        if (!token) return;
-        const res = await fetch("http://127.0.0.1:8000/api/v1/auth/me", {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
+        const data = await api.get<{ email: string; id: string }>("/auth/me");
+        if (data?.email) {
           setProfile({ email: data.email, name: data.email.split("@")[0].toUpperCase() });
         }
       } catch (err) {

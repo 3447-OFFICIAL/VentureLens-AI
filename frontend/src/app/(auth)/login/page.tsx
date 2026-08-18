@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -16,21 +17,15 @@ export default function LoginPage() {
     setError("");
     
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-      
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || "Incorrect email or password");
+      const data = await api.post<{ access_token: string }>("/auth/login", { email, password });
+      if (data?.access_token) {
+        localStorage.setItem("access_token", data.access_token);
+        window.location.href = "/dashboard";
+      } else {
+        throw new Error("Invalid login response");
       }
-      
-      localStorage.setItem("access_token", data.access_token);
-      window.location.href = "/dashboard";
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Incorrect email or password");
     } finally {
       setLoading(false);
     }

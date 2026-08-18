@@ -6,47 +6,39 @@ import {
   Play, Clock, Trash2, Loader2, Sparkles, AlertCircle
 } from "lucide-react";
 
+import { api } from "@/lib/api";
+
 interface Task {
   id: string;
   title: string;
   priority: string;
-  due: string | null;
-  assignee: string | null;
-  company: string | null;
+  due?: string;
+  assignee?: string;
+  company?: string;
   status: string;
 }
 
-export default function TaskManagementModule() {
+export default function TasksModule() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
-  // Create Task Form State
+  // New Task Modal
+  const [modalOpen, setModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newPriority, setNewPriority] = useState("Medium");
-  const [newDue, setNewDue] = useState("Due in 2 days");
   const [newCompany, setNewCompany] = useState("");
+  const [newDue, setNewDue] = useState("In 2 days");
   const [creating, setCreating] = useState(false);
 
   const fetchTasks = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setError("Please login first.");
-        return;
-      }
       setLoading(true);
       setError("");
-      
-      const res = await fetch("http://127.0.0.1:8000/api/v1/tasks/", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to load tasks.");
-      
-      const data = await res.json();
+      const data = await api.get<Task[]>("/tasks/");
       setTasks(data);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Failed to load tasks.");
     } finally {
       setLoading(false);
     }
@@ -63,21 +55,11 @@ export default function TaskManagementModule() {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status: nextStatus } : t));
 
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/tasks/${id}`, {
-        method: "PATCH",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: nextStatus })
-      });
-
-      if (!res.ok) throw new Error("Failed to update status.");
+      await api.patch(`/tasks/${id}`, { status: nextStatus });
     } catch (err: any) {
       // Revert optimistic update
       setTasks(prev => prev.map(t => t.id === id ? { ...t, status: currentStatus } : t));
-      alert(err.message);
+      alert(err.message || "Failed to update status.");
     }
   };
 
@@ -87,30 +69,20 @@ export default function TaskManagementModule() {
 
     setCreating(true);
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/tasks/", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title: newTitle,
-          priority: newPriority,
-          due: newDue,
-          company: newCompany || "Global",
-          assignee: "JD",
-          status: "todo"
-        })
+      await api.post("/tasks/", {
+        title: newTitle,
+        priority: newPriority,
+        due: newDue,
+        company: newCompany || "Global",
+        assignee: "JD",
+        status: "todo"
       });
 
-      if (!res.ok) throw new Error("Failed to create task.");
-      
       setNewTitle("");
       setNewCompany("");
       await fetchTasks();
     } catch (err: any) {
-      alert(err.message);
+      alert(err.message || "Failed to create task.");
     } finally {
       setCreating(false);
     }
@@ -121,15 +93,10 @@ export default function TaskManagementModule() {
     setTasks(prev => prev.filter(t => t.id !== id));
 
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/tasks/${id}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to delete task.");
+      await api.delete(`/tasks/${id}`);
     } catch (err: any) {
       await fetchTasks();
-      alert(err.message);
+      alert(err.message || "Failed to delete task.");
     }
   };
 

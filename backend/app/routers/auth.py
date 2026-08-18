@@ -7,13 +7,9 @@ from ..models.user import User
 from ..models.tenant import Tenant
 from ..models.schemas import UserCreate, UserLogin, Token
 from ..core.security import get_password_hash, verify_password, create_access_token
-from ..api.deps import get_current_user
+from ..api.deps import get_current_user, get_db_unbound
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-async def get_db_unbound():
-    async with AsyncSessionLocal() as session:
-        yield session
 
 @router.post("/signup", response_model=Token)
 async def signup(user_in: UserCreate, db: AsyncSession = Depends(get_db_unbound)):

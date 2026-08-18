@@ -6,6 +6,7 @@ import {
   Clock, ShieldAlert, BarChart3, ChevronRight, Play, Loader2
 } from "lucide-react";
 import Link from "next/link";
+import { api } from "@/lib/api";
 
 interface Deal {
   id: string;
@@ -24,7 +25,7 @@ interface Task {
   status: string;
 }
 
-export default function OverviewDashboard() {
+export default function OverviewPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,39 +34,29 @@ export default function OverviewDashboard() {
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const token = localStorage.getItem("access_token");
-        if (!token) return;
         setLoading(true);
 
         // Fetch User Profile
-        const profileRes = await fetch("http://127.0.0.1:8000/api/v1/auth/me", {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (profileRes.ok) {
-          const profileData = await profileRes.json();
-          setProfile({
-            name: profileData.email.split("@")[0].toUpperCase(),
-            email: profileData.email
-          });
+        try {
+          const profileData = await api.get<{ id: string; email: string }>("/auth/me");
+          if (profileData?.email) {
+            setProfile({
+              name: profileData.email.split("@")[0].toUpperCase(),
+              email: profileData.email
+            });
+          }
+        } catch {
+          // Token not yet available or guest
         }
 
-        // Fetch Active Deals
-        const dealsRes = await fetch("http://127.0.0.1:8000/api/v1/deals/", {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (dealsRes.ok) {
-          const dealsData = await dealsRes.json();
-          setDeals(dealsData);
-        }
+        // Fetch Active Deals and Tasks concurrently
+        const [dealsData, tasksData] = await Promise.allSettled([
+          api.get<Deal[]>("/deals/"),
+          api.get<Task[]>("/tasks/")
+        ]);
 
-        // Fetch Active Tasks
-        const tasksRes = await fetch("http://127.0.0.1:8000/api/v1/tasks/", {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (tasksRes.ok) {
-          const tasksData = await tasksRes.json();
-          setTasks(tasksData);
-        }
+        if (dealsData.status === "fulfilled") setDeals(dealsData.value || []);
+        if (tasksData.status === "fulfilled") setTasks(tasksData.value || []);
 
       } catch (err) {
         console.error("Error loading dashboard data", err);
@@ -81,15 +72,7 @@ export default function OverviewDashboard() {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status: nextStatus } : t));
 
     try {
-      const token = localStorage.getItem("access_token");
-      await fetch(`http://127.0.0.1:8000/api/v1/tasks/${id}`, {
-        method: "PATCH",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: nextStatus })
-      });
+      await api.patch(`/tasks/${id}`, { status: nextStatus });
     } catch (err) {
       console.error("Failed to toggle task", err);
     }

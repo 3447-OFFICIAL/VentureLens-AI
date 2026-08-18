@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useCopilotStore } from '@/store/useCopilotStore';
 import { Bot, User, X, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { fetchWithAuth } from '@/lib/api';
 
 export default function CopilotModal() {
   const { isOpen, toggleOpen, setOpen, messages, addMessage, appendChunkToLastMessage, isTyping, setTyping } = useCopilotStore();
@@ -39,13 +40,9 @@ export default function CopilotModal() {
     setTyping(true);
 
     try {
-      // Connect to the FastAPI SSE endpoint
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1'}/ai/chat`, {
+      // Connect to the FastAPI SSE endpoint using centralized client
+      const response = await fetchWithAuth('/ai/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${token}` // In real app
-        },
         body: JSON.stringify({ company_id: 'context-id', query: userMessage })
       });
 

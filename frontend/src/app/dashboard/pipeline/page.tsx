@@ -5,6 +5,7 @@ import {
   Search, Plus, Filter, MoreHorizontal, MessageSquare, CheckCircle2, 
   AlertCircle, Zap, Activity, Loader2, X, PlusCircle
 } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface Deal {
   id: string;
@@ -38,26 +39,12 @@ export default function PipelinePage() {
 
   const loadDeals = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setError("Please login first.");
-        return;
-      }
       setLoading(true);
       setError("");
-      
-      const res = await fetch("http://127.0.0.1:8000/api/v1/deals/", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      
-      if (!res.ok) {
-        throw new Error("Failed to load deals from server.");
-      }
-      
-      const data = await res.json();
+      const data = await api.get<Deal[]>("/deals/");
       setDeals(data);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Failed to load deals from server.");
     } finally {
       setLoading(false);
     }
@@ -73,21 +60,11 @@ export default function PipelinePage() {
 
     setCreating(true);
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/deals/", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          company_name: newCompanyName,
-          amount: newAmount,
-          stage: newStage
-        })
+      await api.post("/deals/", {
+        company_name: newCompanyName,
+        amount: newAmount,
+        stage: newStage
       });
-
-      if (!res.ok) throw new Error("Failed to create deal.");
 
       setNewCompanyName("");
       setNewAmount(1000000);
@@ -96,7 +73,7 @@ export default function PipelinePage() {
       // Reload deals
       await loadDeals();
     } catch (err: any) {
-      alert(err.message);
+      alert(err.message || "Failed to create deal.");
     } finally {
       setCreating(false);
     }
@@ -104,22 +81,11 @@ export default function PipelinePage() {
 
   const handleMoveStage = async (dealId: string, targetStage: string) => {
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/deals/${dealId}`, {
-        method: "PATCH",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ stage: targetStage })
-      });
-
-      if (!res.ok) throw new Error("Failed to update deal stage.");
-      
+      await api.patch(`/deals/${dealId}`, { stage: targetStage });
       // Update local state
       setDeals(prevDeals => prevDeals.map(d => d.id === dealId ? { ...d, stage: targetStage } : d));
     } catch (err: any) {
-      alert(err.message);
+      alert(err.message || "Failed to update deal stage.");
     }
   };
 

@@ -1,6 +1,6 @@
-// A robust wrapper around native fetch for the FastAPI backend
+// Centralized typed API client for VentureLens AI
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
 export class APIError extends Error {
   status: number;
@@ -14,31 +14,33 @@ export class APIError extends Error {
   }
 }
 
-async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
-  // In a real app, retrieve JWT from cookies or a secure store
+export async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
   
   const headers = new Headers(options.headers);
-  headers.set('Content-Type', 'application/json');
+  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
+  }
   
-  if (token) {
+  if (token && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+
+  const response = await fetch(url, {
     ...options,
     headers,
   });
 
   if (!response.ok) {
-    let errorData;
+    let errorData: Record<string, unknown> = {};
     try {
       errorData = await response.json();
     } catch {
       errorData = { detail: response.statusText };
     }
-    // Handle RFC 7807 standard error structure
-    const message = errorData.detail || errorData.title || 'An error occurred';
+    const message = (errorData.detail as string) || (errorData.title as string) || `Request failed with status ${response.status}`;
     throw new APIError(response.status, message, errorData);
   }
 
@@ -46,8 +48,28 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
 }
 
 export const api = {
-  get: (endpoint: string, options?: RequestInit) => fetchWithAuth(endpoint, { ...options, method: 'GET' }).then(res => res.json()),
-  post: (endpoint: string, data: Record<string, unknown>, options?: RequestInit) => fetchWithAuth(endpoint, { ...options, method: 'POST', body: JSON.stringify(data) }).then(res => res.json()),
-  put: (endpoint: string, data: Record<string, unknown>, options?: RequestInit) => fetchWithAuth(endpoint, { ...options, method: 'PUT', body: JSON.stringify(data) }).then(res => res.json()),
-  delete: (endpoint: string, options?: RequestInit) => fetchWithAuth(endpoint, { ...options, method: 'DELETE' }).then(res => res.json()),
+  get: async <T = any>(endpoint: string, options?: RequestInit): Promise<T> => {
+    const res = await fetchWithAuth(endpoint, { ...options, method: 'GET' });
+    return res.json();
+  },
+  post: async <T = any>(endpoint: string, data?: any, options?: RequestInit): Promise<T> => {
+    const body = data instanceof FormData ? data : JSON.stringify(data ?? {});
+    const res = await fetchWithAuth(endpoint, { ...options, method: 'POST', body });
+    return res.json();
+  },
+  patch: async <T = any>(endpoint: string, data?: any, options?: RequestInit): Promise<T> => {
+    const body = data instanceof FormData ? data : JSON.stringify(data ?? {});
+    const res = await fetchWithAuth(endpoint, { ...options, method: 'PATCH', body });
+    return res.json();
+  },
+  put: async <T = any>(endpoint: string, data?: any, options?: RequestInit): Promise<T> => {
+    const body = data instanceof FormData ? data : JSON.stringify(data ?? {});
+    const res = await fetchWithAuth(endpoint, { ...options, method: 'PUT', body });
+    return res.json();
+  },
+  delete: async <T = any>(endpoint: string, options?: RequestInit): Promise<T> => {
+    const res = await fetchWithAuth(endpoint, { ...options, method: 'DELETE' });
+    if (res.status === 204) return {} as T;
+    return res.json();
+  },
 };

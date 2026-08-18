@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { api } from "@/lib/api";
+
 interface Company {
   id: string;
   name: string;
@@ -36,23 +38,12 @@ export default function CompaniesModule() {
 
   const fetchCompanies = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setError("Please login first.");
-        return;
-      }
       setLoading(true);
       setError("");
-      
-      const res = await fetch("http://127.0.0.1:8000/api/v1/companies/", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to load companies.");
-      
-      const data = await res.json();
+      const data = await api.get<Company[]>("/companies/");
       setCompanies(data);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Failed to load companies.");
     } finally {
       setLoading(false);
     }
@@ -68,32 +59,22 @@ export default function CompaniesModule() {
 
     setCreating(true);
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch("http://127.0.0.1:8000/api/v1/companies/", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: newName,
-          stage: newStage,
-          sector: newSector,
-          metadata_blob: {
-            owner: newOwner,
-            runway: "12 mo",
-            health: 75
-          }
-        })
+      await api.post("/companies/", {
+        name: newName,
+        stage: newStage,
+        sector: newSector,
+        metadata_blob: {
+          owner: newOwner,
+          runway: "12 mo",
+          health: 75
+        }
       });
-
-      if (!res.ok) throw new Error("Failed to create company.");
       
       setNewName("");
       setModalOpen(false);
       await fetchCompanies();
     } catch (err: any) {
-      alert(err.message);
+      alert(err.message || "Failed to create company.");
     } finally {
       setCreating(false);
     }

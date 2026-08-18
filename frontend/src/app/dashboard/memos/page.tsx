@@ -5,6 +5,7 @@ import {
   FileText, Search, Filter, Plus, CheckCircle, 
   ChevronRight, Users, Clock, Sparkles, Loader2, X, Edit, Edit3, Trash2
 } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface Memo {
   id: string;
@@ -23,7 +24,6 @@ export default function InvestmentMemosModule() {
   // Create / Edit Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMemo, setEditingMemo] = useState<Memo | null>(null);
-  
   const [newTitle, setNewTitle] = useState("");
   const [newCompanyName, setNewCompanyName] = useState("");
   const [newStatus, setNewStatus] = useState("Draft");
@@ -33,23 +33,12 @@ export default function InvestmentMemosModule() {
 
   const fetchMemos = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setError("Please login first.");
-        return;
-      }
       setLoading(true);
       setError("");
-      
-      const res = await fetch("http://127.0.0.1:8000/api/v1/memos/", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to load memos.");
-      
-      const data = await res.json();
+      const data = await api.get<Memo[]>("/memos/");
       setMemos(data);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Failed to load memos.");
     } finally {
       setLoading(false);
     }
@@ -85,48 +74,24 @@ export default function InvestmentMemosModule() {
 
     setCreating(true);
     try {
-      const token = localStorage.getItem("access_token");
-      let res;
-      if (editingMemo) {
-        // Update Memo (PATCH)
-        res = await fetch(`http://127.0.0.1:8000/api/v1/memos/${editingMemo.id}`, {
-          method: "PATCH",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            title: newTitle,
-            company_name: newCompanyName,
-            status: newStatus,
-            score: parseFloat(newScore.toString()),
-            owner: newOwner
-          })
-        });
-      } else {
-        // Create Memo (POST)
-        res = await fetch("http://127.0.0.1:8000/api/v1/memos/", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            title: newTitle,
-            company_name: newCompanyName,
-            status: newStatus,
-            score: parseFloat(newScore.toString()),
-            owner: newOwner
-          })
-        });
-      }
+      const payload = {
+        title: newTitle,
+        company_name: newCompanyName,
+        status: newStatus,
+        score: parseFloat(newScore.toString()),
+        owner: newOwner
+      };
 
-      if (!res.ok) throw new Error("Failed to save memo.");
+      if (editingMemo) {
+        await api.patch(`/memos/${editingMemo.id}`, payload);
+      } else {
+        await api.post("/memos/", payload);
+      }
       
       setModalOpen(false);
       await fetchMemos();
     } catch (err: any) {
-      alert(err.message);
+      alert(err.message || "Failed to save memo.");
     } finally {
       setCreating(false);
     }
