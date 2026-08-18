@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 psycopg2-binary
+asyncpg
 alembic
 pydantic
 pydantic-settings
@@ -9,6 +10,8 @@ redis
 celery
 qdrant-client
 python-jose[cryptography]
+bcrypt
+passlib[bcrypt]
 openai
 aiosqlite
 email-validator
@@ -18,3 +21,4 @@ aiofiles
 pytest
 pytest-asyncio
 httpx
+ruff
