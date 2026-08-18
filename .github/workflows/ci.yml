@@ -26,10 +26,11 @@ jobs:
         ruff check backend/app
     - name: Run Tests (Pytest)
       run: |
-        pytest backend/tests/ --cov=backend/app --cov-report=xml
+        cd backend
+        pytest tests/
       env:
-        DATABASE_URL: sqlite:///./test.db
-        SECRET_KEY: test_secret
+        DATABASE_URL: sqlite+aiosqlite:///./test.db
+        SECRET_KEY: test_secret_ci_key
 
   frontend-test:
     runs-on: ubuntu-latest

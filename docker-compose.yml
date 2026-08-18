@@ -2,7 +2,8 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
+    container_name: venturelens-postgres
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -11,20 +12,87 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d venturelens"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
-    image: redis:7
+    image: redis:7-alpine
+    container_name: venturelens-redis
     ports:
       - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   qdrant:
     image: qdrant/qdrant:latest
+    container_name: venturelens-qdrant
     ports:
       - "6333:6333"
       - "6334:6334"
     volumes:
       - qdrantdata:/qdrant/storage
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: venturelens-backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://user:password@postgres:5432/venturelens
+      REDIS_URL: redis://redis:6379/0
+      QDRANT_HOST: http://qdrant
+      SECRET_KEY: ${SECRET_KEY:-DEV_SECRET_DO_NOT_USE_IN_PROD}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: venturelens-worker
+    command: ["celery", "-A", "app.worker.celery_app", "worker", "--loglevel=info"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://user:password@postgres:5432/venturelens
+      REDIS_URL: redis://redis:6379/0
+      QDRANT_HOST: http://qdrant
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: venturelens-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
 volumes:
   pgdata:
+  redisdata:
   qdrantdata:
