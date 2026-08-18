@@ -1,5 +1,6 @@
 from ..base import BaseAgent
 
+
 class CriticAgent(BaseAgent):
     def __init__(self, tenant_id: str):
         super().__init__(

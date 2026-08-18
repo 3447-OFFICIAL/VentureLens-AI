@@ -1,25 +1,26 @@
-import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.core.security import get_password_hash
+from app.models.auth import OrganizationUsers
+from app.models.crm import Company, Deal, Memo, Task
 from app.models.tenant import Tenant
 from app.models.user import User
-from app.models.auth import OrganizationUsers
-from app.models.crm import Company, Deal, Task, Memo
-from app.core.security import get_password_hash
+
 
 async def seed_db(db: AsyncSession):
     # Check if a user already exists
     result = await db.execute(select(User))
     if result.scalars().first():
         return # already seeded
-        
+
     print("[SEED] Starting database seeding...")
-    
+
     # 1. Create Tenant
     tenant = Tenant(name="VentureLens Capital")
     db.add(tenant)
     await db.flush()
-    
+
     # 2. Create User (arjun@venturelens.ai / password123)
     user = User(
         email="arjun@venturelens.ai",
@@ -27,7 +28,7 @@ async def seed_db(db: AsyncSession):
     )
     db.add(user)
     await db.flush()
-    
+
     # 3. Org Mapping
     org_mapping = OrganizationUsers(
         user_id=user.id,
@@ -35,7 +36,7 @@ async def seed_db(db: AsyncSession):
         role="owner"
     )
     db.add(org_mapping)
-    
+
     # 4. Companies & Deals
     companies_data = [
         {"name": "SynthAI", "stage": "Series A", "arr": 12400000, "runway": "14 mo", "owner": "Arjun Mehta", "health": 84, "amount": 5000000, "deal_stage": "Term Sheet"},
@@ -48,7 +49,7 @@ async def seed_db(db: AsyncSession):
         {"name": "PayFlow", "stage": "Seed", "arr": 1800000, "runway": "11 mo", "owner": "Karen Patel", "health": 56, "amount": 900000, "deal_stage": "Closed"},
         {"name": "FinFlow", "stage": "Seed", "arr": 500000, "runway": "7 mo", "owner": "Riya Shah", "health": 60, "amount": 400000, "deal_stage": "Screen"}
     ]
-    
+
     for c_data in companies_data:
         company = Company(
             tenant_id=tenant.id,
@@ -61,7 +62,7 @@ async def seed_db(db: AsyncSession):
         )
         db.add(company)
         await db.flush()
-        
+
         deal = Deal(
             tenant_id=tenant.id,
             company_id=company.id,
@@ -70,7 +71,7 @@ async def seed_db(db: AsyncSession):
             probability=0.85 if c_data["deal_stage"] == "Closed" else 0.50
         )
         db.add(deal)
-        
+
     # 5. Tasks
     tasks_data = [
         {"title": "Review FinModel - SynthAI", "priority": "High", "due": "Due today", "assignee": "JD", "company": "SynthAI", "status": "todo"},
@@ -91,7 +92,7 @@ async def seed_db(db: AsyncSession):
             status=t_data["status"]
         )
         db.add(task)
-        
+
     # 6. Memos
     memos_data = [
         {"title": "Investment Memo - SynthAI Series A", "company_name": "SynthAI", "status": "Final", "score": 84.0, "owner": "Arjun Mehta"},
@@ -111,6 +112,6 @@ async def seed_db(db: AsyncSession):
             owner=m_data["owner"]
         )
         db.add(memo)
-        
+
     await db.commit()
     print("[SEED] Seeding completed successfully!")

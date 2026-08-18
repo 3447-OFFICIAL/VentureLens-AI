@@ -1,15 +1,16 @@
 import uuid
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from pydantic import BaseModel, ConfigDict
 
-from ..core.database import get_db
 from ..api.deps import get_current_user
-from ..models.user import User
-from ..models.ic_dd import DDItem
+from ..core.database import get_db
 from ..models.crm import Company
+from ..models.ic_dd import DDItem
+from ..models.user import User
 
 router = APIRouter(prefix="/dd", tags=["Due Diligence"])
 
@@ -30,7 +31,7 @@ class DDItemUpdate(BaseModel):
 
 class DDItemResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: str
     company_id: str
     category: str
@@ -221,7 +222,7 @@ async def create_dd_item(
     db.add(new_item)
     await db.commit()
     await db.refresh(new_item)
-    
+
     return DDItemResponse(
         id=str(new_item.id),
         company_id=str(new_item.company_id),
@@ -259,7 +260,7 @@ async def update_dd_item(
 
     await db.commit()
     await db.refresh(item)
-    
+
     return DDItemResponse(
         id=str(item.id),
         company_id=str(item.company_id),

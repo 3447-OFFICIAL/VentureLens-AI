@@ -1,7 +1,9 @@
-import os
 import asyncio
 import logging
+import os
+
 from celery import Celery
+
 from .core.config import settings
 from .core.qdrant import upsert_document_chunks
 
@@ -46,7 +48,7 @@ def process_document(document_id: str, tenant_id: str, company_id: str, file_pat
     and index them into Qdrant under the tenant's isolated namespace.
     """
     logger.info(f"Processing document {filename} ({document_id}) for tenant {tenant_id} and company {company_id}")
-    
+
     extracted_text = ""
     if os.path.exists(file_path):
         try:
@@ -54,7 +56,7 @@ def process_document(document_id: str, tenant_id: str, company_id: str, file_pat
                 extracted_text = f.read()
         except Exception as e:
             logger.warning(f"Could not read local file directly, using filename context: {e}")
-            
+
     if not extracted_text:
         extracted_text = (
             f"Document Title: {filename}\n"

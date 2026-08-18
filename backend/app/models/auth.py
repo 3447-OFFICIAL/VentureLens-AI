@@ -1,11 +1,13 @@
-from sqlalchemy import Column, String, ForeignKey, Boolean, DateTime
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
+
 from .base import Base, SoftDeleteMixin
+
 
 class Session(SoftDeleteMixin, Base):
     __tablename__ = "sessions"
-    
+
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     device_info = Column(String)
@@ -15,7 +17,7 @@ class Session(SoftDeleteMixin, Base):
 
 class OrganizationUsers(SoftDeleteMixin, Base):
     __tablename__ = "organization_users"
-    
+
     # Using SoftDeleteMixin means this table will have its own UUID 'id' as primary key.
     # Alternatively we could use Composite PK, but sticking to the standard id is fine.
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)

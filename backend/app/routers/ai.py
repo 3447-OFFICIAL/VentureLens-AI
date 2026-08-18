@@ -1,18 +1,19 @@
 import os
 import uuid
-import aiofiles
 from typing import Optional
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
-from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
 
-from ..core.database import get_db
-from ..api.deps import get_current_user
-from ..models.user import User
-from ..models.crm import Document
+import aiofiles
+from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from ..agents.workflow import AIAgentCoordinator
+from ..api.deps import get_current_user
+from ..core.database import get_db
 from ..core.qdrant import search_documents
+from ..models.crm import Document
+from ..models.user import User
 from ..worker import process_document
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -35,7 +36,7 @@ class SearchQuery(BaseModel):
 
 @router.post("/chat")
 async def ask_ai(
-    query: ChatQuery, 
+    query: ChatQuery,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -84,8 +85,8 @@ async def search_knowledge_base(
 
 @router.post("/upload")
 async def upload_document(
-    file: UploadFile = File(...), 
-    company_id: str = Form(...), 
+    file: UploadFile = File(...),
+    company_id: str = Form(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -96,12 +97,12 @@ async def upload_document(
     doc_id = uuid.uuid4()
     safe_filename = f"{doc_id}_{file.filename}"
     file_path = os.path.join(UPLOAD_DIR, safe_filename)
-    
+
     # Save file to disk
     async with aiofiles.open(file_path, "wb") as out_file:
         content = await file.read()
         await out_file.write(content)
-        
+
     # Save document record to DB
     doc_record = Document(
         id=doc_id,
@@ -114,19 +115,19 @@ async def upload_document(
     )
     db.add(doc_record)
     await db.commit()
-    
+
     # Trigger background worker for text chunking & vector indexing
     task = process_document.delay(
-        str(doc_id), 
-        str(current_user.tenant_id), 
-        company_id, 
-        file_path, 
+        str(doc_id),
+        str(current_user.tenant_id),
+        company_id,
+        file_path,
         file.filename or "Document"
     )
-    
+
     return {
-        "status": "processing", 
-        "filename": file.filename, 
+        "status": "processing",
+        "filename": file.filename,
         "task_id": task.id if task else None,
         "doc_id": str(doc_id)
     }

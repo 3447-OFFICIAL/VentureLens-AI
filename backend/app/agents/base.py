@@ -1,6 +1,8 @@
 import asyncio
-from typing import List, Dict, Any, AsyncGenerator, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional
+
 from openai import AsyncOpenAI
+
 from ..core.config import settings
 
 ROLE_HEURISTICS: Dict[str, str] = {
@@ -75,13 +77,13 @@ class BaseAgent:
     Abstract Base Class for VentureLens multi-agent specialists and synthesizers.
     Supports streaming token generation and structured domain insights.
     """
-    
+
     def __init__(self, tenant_id: str, role_name: str, system_prompt: str):
         self.tenant_id = tenant_id
         self.role_name = role_name
         self.system_prompt = system_prompt
         self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY) if settings.OPENAI_API_KEY else None
-        
+
     async def invoke(self, payload: str, context: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
         """
         Executes the agent's core LLM chain or returns structured role heuristics when offline.

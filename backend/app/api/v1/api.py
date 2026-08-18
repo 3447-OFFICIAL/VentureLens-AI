@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from ...routers import auth, deals, ai, companies, tasks, memos, ic, dd, portfolio
+
+from ...routers import ai, auth, companies, dd, deals, ic, memos, portfolio, tasks
 
 api_router = APIRouter()
 

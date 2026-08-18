@@ -1,9 +1,11 @@
-from sqlalchemy import Column, String, Boolean
+from sqlalchemy import Boolean, Column, String
+
 from .base import Base, SoftDeleteMixin
+
 
 class User(SoftDeleteMixin, Base):
     __tablename__ = "users"
-    
+
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     full_name = Column(String)

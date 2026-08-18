@@ -1,6 +1,7 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
+
 class VentureLensException(Exception):
     def __init__(self, code: str, message: str, target: str = None, status_code: int = 400):
         self.code = code

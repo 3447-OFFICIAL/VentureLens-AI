@@ -1,13 +1,14 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from pydantic import BaseModel
-from typing import List, Dict, Any
 
-from ..core.database import get_db
 from ..api.deps import get_current_user
-from ..models.user import User
+from ..core.database import get_db
 from ..models.crm import Task
+from ..models.user import User
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -36,7 +37,7 @@ class TaskResponse(BaseModel):
     assignee: str | None = None
     company: str | None = None
     status: str
-    
+
     class Config:
         from_attributes = True
 
@@ -47,7 +48,7 @@ async def get_tasks(
 ):
     result = await db.execute(select(Task))
     tasks = result.scalars().all()
-    
+
     return [
         TaskResponse(
             id=str(t.id),
@@ -91,7 +92,7 @@ async def update_task(
     task = result.scalars().first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-        
+
     if task_in.title is not None:
         task.title = task_in.title
     if task_in.priority is not None:
@@ -104,7 +105,7 @@ async def update_task(
         task.company = task_in.company
     if task_in.status is not None:
         task.status = task_in.status
-        
+
     await db.commit()
     await db.refresh(task)
     return task
@@ -119,7 +120,7 @@ async def delete_task(
     task = result.scalars().first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-        
+
     await db.delete(task)
     await db.commit()
     return {"status": "success"}

@@ -1,25 +1,21 @@
 import asyncio
 import json
-from typing import Dict, Any, AsyncGenerator, List, Optional
+from typing import Any, AsyncGenerator, Dict, Optional
 
-from .specialists.agents import (
-    FinancialAgent, TechnicalAgent, CyberAgent, 
-    LegalAgent, MarketAgent, FounderAgent
-)
-from .synthesis.agents import (
-    CriticAgent, ReviewerAgent, CommitteeAgent, MemoAgent
-)
 from ..core.qdrant import search_documents
+from .specialists.agents import CyberAgent, FinancialAgent, FounderAgent, LegalAgent, MarketAgent, TechnicalAgent
+from .synthesis.agents import CommitteeAgent, CriticAgent, MemoAgent, ReviewerAgent
+
 
 class AIAgentCoordinator:
     """
     The orchestrator that manages the execution graph of specialized agents,
     critics, vector context ingestion, and the final synthesis engine.
     """
-    
+
     def __init__(self, tenant_id: str):
         self.tenant_id = str(tenant_id)
-        
+
         # Initialize Specialists
         self.financial_agent = FinancialAgent(self.tenant_id)
         self.technical_agent = TechnicalAgent(self.tenant_id)
@@ -27,7 +23,7 @@ class AIAgentCoordinator:
         self.legal_agent = LegalAgent(self.tenant_id)
         self.market_agent = MarketAgent(self.tenant_id)
         self.founder_agent = FounderAgent(self.tenant_id)
-        
+
         self.specialists = [
             self.financial_agent,
             self.technical_agent,
@@ -36,7 +32,7 @@ class AIAgentCoordinator:
             self.market_agent,
             self.founder_agent
         ]
-        
+
         # Initialize QA & Synthesis
         self.critic = CriticAgent(self.tenant_id)
         self.reviewer = ReviewerAgent(self.tenant_id)
@@ -55,13 +51,13 @@ class AIAgentCoordinator:
         )
         if not docs:
             return "No prior data room documents indexed for this company. Using base heuristics."
-            
+
         doc_strings = [
             f"--- Document: {d.get('filename')} (Score: {d.get('score', 0):.2f}) ---\n{d.get('text')}"
             for d in docs
         ]
         return "\n\n".join(doc_strings)
-        
+
     async def generate_investment_memo(self, company_id: str, payload: str) -> Dict[str, Any]:
         """
         Synchronous batch execution of the multi-agent pipeline with RAG context.
@@ -69,25 +65,25 @@ class AIAgentCoordinator:
         # Step 0: RAG Context
         rag_context = await self.retrieve_rag_context(payload, company_id)
         augmented_payload = f"Company ID: {company_id}\n\nContext:\n{rag_context}\n\nObjective: {payload}"
-        
+
         # Step 1: Concurrent specialist analysis
         tasks = [agent.invoke(augmented_payload) for agent in self.specialists]
         specialist_results = await asyncio.gather(*tasks)
-        
+
         aggregated_findings = "\n\n".join([f"## {res['role']}\n{res['content']}" for res in specialist_results])
         context = [{"role": "system", "content": f"Aggregated Findings:\n{aggregated_findings}"}]
-        
+
         # Step 2: QA & Review Pipeline
         critic_res = await self.critic.invoke("Review the aggregated findings for contradictions or vulnerabilities.", context)
         await self.reviewer.invoke("Ensure these findings meet our fund mandate.", context)
-        
+
         # Step 3: Committee Simulation
         committee_res = await self.committee.invoke("Generate bull case, bear case, and key partner questions.", context)
         context.append({"role": "system", "content": f"Critic Notes:\n{critic_res['content']}\n\nCommittee Debate:\n{committee_res['content']}"})
-        
+
         # Step 4: Final Memo Generation
         final_memo = await self.memo_writer.invoke("Compile the final formatted Investment Memo based on all provided context.", context)
-        
+
         return {
             "status": "success",
             "content": final_memo['content'],
@@ -107,12 +103,12 @@ class AIAgentCoordinator:
         await asyncio.sleep(0.3)
         rag_context = await self.retrieve_rag_context(payload, company_id)
         augmented_payload = f"Company ID: {company_id}\n\nContext:\n{rag_context}\n\nObjective: {payload}"
-        
+
         # Step 1: Run Specialists concurrently
         yield f"event: step\ndata: {json.dumps({'step': 'specialists_running', 'message': 'Dispatched 6 parallel specialist agents (Financial, Tech, Cyber, Legal, Market, Founder)...'})}\n\n"
         tasks = [agent.invoke(augmented_payload) for agent in self.specialists]
         specialist_results = await asyncio.gather(*tasks)
-        
+
         for res in specialist_results:
             yield f"event: specialist_done\ndata: {json.dumps({'role': res['role'], 'status': 'complete'})}\n\n"
             await asyncio.sleep(0.1)
@@ -147,17 +143,17 @@ class AIAgentCoordinator:
         await asyncio.sleep(0.2)
 
         context_str = "\n".join([f"- {d.get('filename')}: {d.get('text')}" for d in docs]) if docs else "No direct matching document chunks found."
-        
+
         system_prompt = (
             "You are VentureLens Copilot, an elite venture capital analyst and partner copilot. "
             "Provide concise, evidence-backed answers with explicit numbers and risk considerations. "
             f"Context from Data Room:\n{context_str}"
         )
-        
+
         from .base import BaseAgent
         agent = BaseAgent(self.tenant_id, "Copilot", system_prompt)
-        
+
         async for token in agent.stream_invoke(query):
             yield f"data: {token}\n\n"
-            
+
         yield "event: end\ndata: [DONE]\n\n"

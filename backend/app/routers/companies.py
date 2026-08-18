@@ -1,13 +1,14 @@
+from typing import Any, Dict, List
+
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from pydantic import BaseModel
-from typing import List, Dict, Any
 
-from ..core.database import get_db
 from ..api.deps import get_current_user
-from ..models.user import User
+from ..core.database import get_db
 from ..models.crm import Company
+from ..models.user import User
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
@@ -36,7 +37,7 @@ class CompanyResponse(BaseModel):
     website: str | None = None
     description: str | None = None
     metadata_blob: Dict[str, Any] = {}
-    
+
     class Config:
         from_attributes = True
 
@@ -47,7 +48,7 @@ async def get_companies(
 ):
     result = await db.execute(select(Company))
     companies = result.scalars().all()
-    
+
     # Map the models to dicts/response schema
     return [
         CompanyResponse(
@@ -92,7 +93,7 @@ async def update_company(
     company = result.scalars().first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
-        
+
     if company_in.name is not None:
         company.name = company_in.name
     if company_in.stage is not None:
@@ -105,7 +106,7 @@ async def update_company(
         company.description = company_in.description
     if company_in.metadata_blob is not None:
         company.metadata_blob = {**(company.metadata_blob or {}), **company_in.metadata_blob}
-        
+
     await db.commit()
     await db.refresh(company)
     return company

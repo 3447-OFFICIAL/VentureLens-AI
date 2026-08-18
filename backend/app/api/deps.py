@@ -1,10 +1,11 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from ..core.database import AsyncSessionLocal
+
 from ..core.config import settings
+from ..core.database import AsyncSessionLocal
 from ..models.user import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -27,19 +28,20 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-        
+
     result = await db.execute(select(User).filter(User.email == email))
     user = result.scalars().first()
     if user is None:
         raise credentials_exception
-        
+
     import uuid
+
     from ..core.database import current_tenant_id
-    
+
     # Attach tenant_id dynamically from JWT to the user context
     user.tenant_id = uuid.UUID(tenant_id) if tenant_id else None
     current_tenant_id.set(user.tenant_id)
-        
+
     return user
 
 

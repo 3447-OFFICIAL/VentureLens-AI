@@ -1,7 +1,10 @@
 from datetime import datetime, timedelta, timezone
+
 import bcrypt
 from jose import jwt
+
 from .config import settings
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:

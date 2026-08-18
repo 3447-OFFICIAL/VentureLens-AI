@@ -1,16 +1,17 @@
 import uuid
 from datetime import date
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from pydantic import BaseModel, ConfigDict
 
-from ..core.database import get_db
 from ..api.deps import get_current_user
-from ..models.user import User
-from ..models.portfolio import Metric
+from ..core.database import get_db
 from ..models.crm import Company, Deal
+from ..models.portfolio import Metric
+from ..models.user import User
 
 router = APIRouter(prefix="/portfolio", tags=["Portfolio Analytics"])
 
@@ -22,7 +23,7 @@ class MetricCreate(BaseModel):
 
 class MetricResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: str
     company_id: str
     metric_name: str
@@ -48,7 +49,7 @@ async def get_portfolio_overview(
     """
     comp_res = await db.execute(select(Company))
     companies = comp_res.scalars().all()
-    
+
     deal_res = await db.execute(select(Deal))
     deals = deal_res.scalars().all()
 
@@ -92,10 +93,10 @@ async def get_company_metrics(
             query = query.filter(Metric.company_id == cid)
         except Exception:
             pass
-            
+
     res = await db.execute(query)
     metrics = res.scalars().all()
-    
+
     return [
         MetricResponse(
             id=str(m.id),
@@ -126,7 +127,7 @@ async def record_company_metric(
     db.add(new_metric)
     await db.commit()
     await db.refresh(new_metric)
-    
+
     return MetricResponse(
         id=str(new_metric.id),
         company_id=str(new_metric.company_id),

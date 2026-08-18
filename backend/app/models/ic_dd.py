@@ -1,13 +1,15 @@
-from sqlalchemy import Column, String, Float, Integer, ForeignKey, Text, Index
+from sqlalchemy import Column, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+
 from .base import Base, SoftDeleteMixin
+
 
 class ICVote(SoftDeleteMixin, Base):
     __tablename__ = "ic_votes"
     __table_args__ = (
         Index('ix_ic_vote_tenant_id', 'tenant_id', 'id'),
     )
-    
+
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=False, index=True)
     partner_name = Column(String, nullable=False)
@@ -22,7 +24,7 @@ class DDItem(SoftDeleteMixin, Base):
     __table_args__ = (
         Index('ix_dd_item_tenant_id', 'tenant_id', 'id'),
     )
-    
+
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=False, index=True)
     category = Column(String, nullable=False) # Financial, Legal, Technical, Cybersecurity, Market, Team

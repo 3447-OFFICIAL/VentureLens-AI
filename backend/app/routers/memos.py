@@ -1,13 +1,14 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from pydantic import BaseModel
-from typing import List, Dict, Any
 
-from ..core.database import get_db
 from ..api.deps import get_current_user
-from ..models.user import User
+from ..core.database import get_db
 from ..models.crm import Memo
+from ..models.user import User
 
 router = APIRouter(prefix="/memos", tags=["memos"])
 
@@ -33,7 +34,7 @@ class MemoResponse(BaseModel):
     status: str
     score: float
     owner: str
-    
+
     class Config:
         from_attributes = True
 
@@ -44,7 +45,7 @@ async def get_memos(
 ):
     result = await db.execute(select(Memo))
     memos = result.scalars().all()
-    
+
     return [
         MemoResponse(
             id=str(m.id),
@@ -86,7 +87,7 @@ async def update_memo(
     memo = result.scalars().first()
     if not memo:
         raise HTTPException(status_code=404, detail="Memo not found")
-        
+
     if memo_in.title is not None:
         memo.title = memo_in.title
     if memo_in.company_name is not None:
@@ -97,7 +98,7 @@ async def update_memo(
         memo.score = memo_in.score
     if memo_in.owner is not None:
         memo.owner = memo_in.owner
-        
+
     await db.commit()
     await db.refresh(memo)
     return memo

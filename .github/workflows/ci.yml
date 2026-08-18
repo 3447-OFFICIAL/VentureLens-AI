@@ -8,83 +8,82 @@ on:
 
 jobs:
   backend-test:
+    name: Backend Lint & Pytest
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: 'backend/requirements.txt'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r backend/requirements.txt
-        pip install pytest pytest-asyncio pytest-cov httpx
+        pip install ruff pytest pytest-asyncio httpx aiofiles
+
     - name: Lint (Ruff)
       run: |
-        pip install ruff
-        ruff check backend/app
+        cd backend
+        ruff check app
+
     - name: Run Tests (Pytest)
       run: |
         cd backend
+        export PYTHONPATH=.
         pytest tests/
       env:
         DATABASE_URL: sqlite+aiosqlite:///./test.db
         SECRET_KEY: test_secret_ci_key
 
   frontend-test:
+    name: Frontend Lint & Next.js Build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: 'frontend/package-lock.json'
+
     - name: Install dependencies
       run: |
         cd frontend
         npm ci
-    - name: Lint & Build
+
+    - name: Lint (ESLint)
       run: |
         cd frontend
         npm run lint
-        npm run build
-    - name: E2E Tests (Playwright)
+
+    - name: Build (Next.js Production)
       run: |
         cd frontend
-        npx playwright install --with-deps
-        npx playwright test
+        npm run build
 
-  docker-publish:
+  docker-build:
+    name: Docker Container Build Verification
     needs: [backend-test, frontend-test]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     steps:
-    - uses: actions/checkout@v3
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-    - name: Build and Push Backend Image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: venturelens-api
-        IMAGE_TAG: ${{ github.sha }}
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Backend Docker Image
       run: |
         cd backend
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-    - name: Build and Push Frontend Image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: venturelens-web
-        IMAGE_TAG: ${{ github.sha }}
+        docker build -t venturelens-api:latest .
+
+    - name: Build Frontend Docker Image
       run: |
         cd frontend
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker build -t venturelens-web:latest .

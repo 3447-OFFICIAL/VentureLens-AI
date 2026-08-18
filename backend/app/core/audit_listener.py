@@ -1,16 +1,18 @@
-from sqlalchemy import event
-from app.models.base import Base
-from app.models.audit import AuditLog
-from app.core.database import current_tenant_id
 # We assume current_user_id is also tracked similarly via ContextVar
 # For now, we stub it or assume it's injected if present
 from contextvars import ContextVar
+
+from sqlalchemy import event
+
+from app.core.database import current_tenant_id
+from app.models.audit import AuditLog
+from app.models.base import Base
 
 current_user_id: ContextVar[str | None] = ContextVar("current_user_id", default=None)
 
 def track_changes(mapper, connection, target):
     """
-    SQLAlchemy event listener to track INSERT, UPDATE, DELETE 
+    SQLAlchemy event listener to track INSERT, UPDATE, DELETE
     operations and write them to the AuditLog.
     """
     # Exclude tracking the AuditLog table itself to avoid recursion
@@ -19,7 +21,7 @@ def track_changes(mapper, connection, target):
 
     tenant = current_tenant_id.get()
     user = current_user_id.get()
-    
+
     if not tenant or not user:
         return # Cannot securely log without context
 
@@ -29,7 +31,7 @@ def track_changes(mapper, connection, target):
 
     resource_type = target.__tablename__
     resource_id = getattr(target, "id", None)
-    
+
     # We would write this to the audit_logs table via the active connection
     # For a full implementation, we queue this or write it efficiently.
     AuditLog(

@@ -1,9 +1,10 @@
 import hashlib
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
+from openai import AsyncOpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qmodels
-from openai import AsyncOpenAI
 
 from .config import settings
 
@@ -63,7 +64,7 @@ async def generate_embedding(text: str) -> List[float]:
             return resp.data[0].embedding
         except Exception as e:
             logger.error(f"OpenAI embedding error: {e}")
-            
+
     # Deterministic fallback embedding for local development without OpenAI credentials
     hasher = hashlib.sha256(text.encode("utf-8")).digest()
     vec = []
@@ -84,7 +85,7 @@ async def upsert_document_chunks(
     """
     client = get_qdrant_client()
     points = []
-    
+
     for idx, chunk in enumerate(chunks):
         embedding = await generate_embedding(chunk)
         point_id = hashlib.md5(f"{doc_id}_{idx}".encode("utf-8")).hexdigest()
@@ -96,14 +97,14 @@ async def upsert_document_chunks(
             "chunk_index": idx,
             "text": chunk
         }
-        
+
         # Save to local in-memory store for fallback
         _in_memory_docs.append({
             "id": point_id,
             "vector": embedding,
             "payload": payload
         })
-        
+
         if client:
             points.append(
                 qmodels.PointStruct(
@@ -135,7 +136,7 @@ async def search_documents(
     """
     query_vector = await generate_embedding(query)
     client = get_qdrant_client()
-    
+
     if client:
         try:
             must_conditions = [
@@ -151,14 +152,14 @@ async def search_documents(
                         match=qmodels.MatchValue(value=str(company_id))
                     )
                 )
-                
+
             search_result = client.search(
                 collection_name=COLLECTION_NAME,
                 query_vector=query_vector,
                 query_filter=qmodels.Filter(must=must_conditions),
                 limit=limit
             )
-            
+
             return [
                 {
                     "score": hit.score,
@@ -180,7 +181,7 @@ async def search_documents(
             continue
         if company_id and str(payload.get("company_id")) != str(company_id):
             continue
-            
+
         # Dot product approximation for similarity
         score = sum(a * b for a, b in zip(query_vector[:100], doc["vector"][:100]))
         results.append({
@@ -190,6 +191,6 @@ async def search_documents(
             "chunk_index": payload.get("chunk_index", 0),
             "company_id": payload.get("company_id")
         })
-        
+
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:limit]

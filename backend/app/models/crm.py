@@ -1,13 +1,15 @@
-from sqlalchemy import Column, String, Float, Text, ForeignKey, JSON, Index
+from sqlalchemy import JSON, Column, Float, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+
 from .base import Base, SoftDeleteMixin
+
 
 class Company(SoftDeleteMixin, Base):
     __tablename__ = "companies"
     __table_args__ = (
         Index('ix_company_tenant_id', 'tenant_id', 'id'),
     )
-    
+
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     name = Column(String, nullable=False, index=True)
     website = Column(String)
@@ -21,7 +23,7 @@ class Deal(SoftDeleteMixin, Base):
     __table_args__ = (
         Index('ix_deal_tenant_id', 'tenant_id', 'id'),
     )
-    
+
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=False)
     stage = Column(String, nullable=False, default="Lead") # Lead, Screen, DD, IC, Term Sheet, Closed
@@ -33,7 +35,7 @@ class Document(SoftDeleteMixin, Base):
     __table_args__ = (
         Index('ix_document_tenant_id', 'tenant_id', 'id'),
     )
-    
+
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=False)
     title = Column(String, nullable=False)
@@ -46,7 +48,7 @@ class Task(SoftDeleteMixin, Base):
     __table_args__ = (
         Index('ix_task_tenant_id', 'tenant_id', 'id'),
     )
-    
+
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     title = Column(String, nullable=False)
     priority = Column(String, default="Medium") # High, Medium, Low
@@ -61,7 +63,7 @@ class Memo(SoftDeleteMixin, Base):
     __table_args__ = (
         Index('ix_memo_tenant_id', 'tenant_id', 'id'),
     )
-    
+
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
     company_name = Column(String, nullable=False)
     title = Column(String, nullable=False)

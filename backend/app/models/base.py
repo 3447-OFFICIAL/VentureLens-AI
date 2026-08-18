@@ -1,9 +1,10 @@
-import uuid
 import datetime
+import uuid
+
 from sqlalchemy import Column, DateTime
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, declared_attr
 from sqlalchemy.sql import func
-from sqlalchemy.dialects.postgresql import UUID
 
 Base = declarative_base()
 
@@ -11,7 +12,7 @@ class SoftDeleteMixin:
     """
     Enterprise mixin providing UUIDs, Timestamps, and Soft-Delete functionality.
     """
-    
+
     @declared_attr
     def id(cls):
         return Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)

@@ -1,8 +1,9 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy import text
 from contextvars import ContextVar
 from typing import AsyncGenerator
+
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 from .config import settings
 
@@ -22,10 +23,10 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     async with AsyncSessionLocal() as session:
         tenant_id = current_tenant_id.get()
-        
+
         if tenant_id and session.bind.dialect.name == 'postgresql':
             # Enforce RLS at the database level for this transaction (PostgreSQL only)
             await session.execute(text("SET LOCAL rls.tenant_id = :tenant_id"), {"tenant_id": tenant_id})
-        
+
         yield session
 

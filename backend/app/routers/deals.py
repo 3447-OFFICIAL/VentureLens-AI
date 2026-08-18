@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from pydantic import BaseModel
 from typing import List
 
-from ..core.database import get_db
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from ..api.deps import get_current_user
+from ..core.database import get_db
+from ..models.crm import Company, Deal
 from ..models.user import User
-from ..models.crm import Deal, Company
 
 router = APIRouter(prefix="/deals", tags=["deals"])
 
@@ -29,17 +30,17 @@ class DealResponse(BaseModel):
     stage: str
     amount: float
     probability: float
-    
+
     class Config:
         from_attributes = True
 
 @router.get("/", response_model=List[DealResponse])
 async def get_pipeline(
-    db: AsyncSession = Depends(get_db), 
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Returns all deals. RLS context in `get_db` automatically filters 
+    Returns all deals. RLS context in `get_db` automatically filters
     for the current_user's tenant_id.
     """
     result = await db.execute(
@@ -62,7 +63,7 @@ async def get_pipeline(
 
 @router.post("/", response_model=DealResponse)
 async def create_deal(
-    deal_in: DealCreate, 
+    deal_in: DealCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -72,7 +73,7 @@ async def create_deal(
     # Check if company exists for this tenant
     result = await db.execute(select(Company).filter(Company.name == deal_in.company_name))
     company = result.scalars().first()
-    
+
     if not company:
         company = Company(
             tenant_id=current_user.tenant_id,
@@ -81,7 +82,7 @@ async def create_deal(
         )
         db.add(company)
         await db.flush()
-        
+
     new_deal = Deal(
         tenant_id=current_user.tenant_id,
         company_id=company.id,
@@ -91,7 +92,7 @@ async def create_deal(
     db.add(new_deal)
     await db.commit()
     await db.refresh(new_deal)
-    
+
     return {
         "id": str(new_deal.id),
         "company_id": str(new_deal.company_id),
@@ -115,21 +116,21 @@ async def update_deal(
     deal = result.scalars().first()
     if not deal:
         raise HTTPException(status_code=404, detail="Deal not found")
-        
+
     if deal_in.stage is not None:
         deal.stage = deal_in.stage
     if deal_in.amount is not None:
         deal.amount = deal_in.amount
     if deal_in.probability is not None:
         deal.probability = deal_in.probability
-        
+
     await db.commit()
     await db.refresh(deal)
-    
+
     comp_result = await db.execute(select(Company).filter(Company.id == deal.company_id))
     company = comp_result.scalars().first()
     company_name = company.name if company else "Unknown"
-    
+
     return {
         "id": str(deal.id),
         "company_id": str(deal.company_id),

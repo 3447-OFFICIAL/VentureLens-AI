@@ -1,15 +1,16 @@
 import uuid
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from pydantic import BaseModel, ConfigDict
 
-from ..core.database import get_db
 from ..api.deps import get_current_user
-from ..models.user import User
-from ..models.ic_dd import ICVote
+from ..core.database import get_db
 from ..models.crm import Company
+from ..models.ic_dd import ICVote
+from ..models.user import User
 
 router = APIRouter(prefix="/ic", tags=["Investment Committee"])
 
@@ -24,7 +25,7 @@ class VoteCreate(BaseModel):
 
 class VoteResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: str
     company_id: str
     partner_name: str
@@ -73,7 +74,7 @@ async def get_ic_summary(
 
     votes_res = await db.execute(select(ICVote).filter(ICVote.company_id == uuid.UUID(company_id) if len(company_id) == 36 else ICVote.company_id == company_id))
     votes = votes_res.scalars().all()
-    
+
     # If no votes in DB yet, return structured default committee seed state
     if not votes:
         dummy_votes = [
@@ -179,7 +180,7 @@ async def submit_ic_vote(
     db.add(new_vote)
     await db.commit()
     await db.refresh(new_vote)
-    
+
     return VoteResponse(
         id=str(new_vote.id),
         company_id=str(new_vote.company_id),
